@@ -760,89 +760,164 @@ def risk_factors(year: int | None = None) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------- 风险分层
-def stratify() -> dict[str, Any]:
-    """共病数量分布、风险等级分布与年龄组共病率。"""
+STRATUM_AGG_TABLE = "agg_risk_stratum"
 
-    def build() -> dict[str, Any]:
-        payload: dict[str, Any] = {
-            "totalSamples": 0,
-            "validSamples": 0,
-            "distribution": [],
-            "levels": [],
-            "byAge": [],
-        }
-        columns = _require_db()
-        if "chronic_count" not in columns:
-            payload["note"] = "库中缺少 chronic_count 字段，无法分层"
-            return payload
-        sql = f"""
-            SELECT
-                SUM(CASE WHEN chronic_count = 0 THEN 1 ELSE 0 END) AS c0,
-                SUM(CASE WHEN chronic_count = 1 THEN 1 ELSE 0 END) AS c1,
-                SUM(CASE WHEN chronic_count = 2 THEN 1 ELSE 0 END) AS c2,
-                SUM(CASE WHEN chronic_count = 3 THEN 1 ELSE 0 END) AS c3,
-                SUM(CASE WHEN chronic_count >= 4 THEN 1 ELSE 0 END) AS c4,
-                COUNT(*) AS total,
-                COUNT(chronic_count) AS valid
-            FROM {FACT_TABLE}
-        """
-        by_age_sql = None
-        if "age_grp" in columns and "multimorbidity" in columns:
-            by_age_sql = f"""
-                SELECT age_grp AS age_grp,
-                       COUNT(*) AS samples,
-                       SUM(CASE WHEN multimorbidity = 1 THEN 1 ELSE 0 END) AS mm_cases,
-                       COUNT(multimorbidity) AS mm_valid
-                FROM {FACT_TABLE}
-                WHERE age_grp IS NOT NULL
-                GROUP BY age_grp
-                ORDER BY age_grp
-            """
-        with connection() as conn:
-            row = conn.execute(sql).fetchone()
-            age_rows = conn.execute(by_age_sql).fetchall() if by_age_sql else []
-        total = _int(row["total"])
-        valid = _int(row["valid"])
-        if total == 0:
-            return payload
-        buckets = [
-            (0, "0 种", row["c0"]),
-            (1, "1 种", row["c1"]),
-            (2, "2 种", row["c2"]),
-            (3, "3 种", row["c3"]),
-            (4, "≥4 种", row["c4"]),
-        ]
-        payload["totalSamples"] = total
-        payload["validSamples"] = valid
-        payload["distribution"] = [
+
+def _stratify_from_agg() -> dict[str, Any] | None:
+    """优先用物化表 agg_risk_stratum（chronic_count / age_grp 两个维度），避免全表扫描。"""
+    agg_columns = set(schema().get(STRATUM_AGG_TABLE, []))
+    if not {"dimension", "stratum_code", "n", "n_multimorbidity"}.issubset(agg_columns):
+        return None
+    sql = (
+        f"SELECT dimension AS dimension, stratum_code AS stratum_code, n AS n, "
+        f"n_multimorbidity AS mm FROM {STRATUM_AGG_TABLE} "
+        "WHERE dimension IN ('chronic_count', 'age_grp') ORDER BY dimension, stratum_code"
+    )
+    with connection() as conn:
+        rows = conn.execute(sql).fetchall()
+    chronic = [r for r in rows if r["dimension"] == "chronic_count"]
+    ages = [r for r in rows if r["dimension"] == "age_grp"]
+    if not chronic:
+        return None
+    valid = sum(_int(r["n"]) for r in chronic)
+    multimorbidity = sum(_int(r["mm"]) for r in chronic)
+    buckets = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+    for row in chronic:
+        count = _int(row["stratum_code"])
+        index = count if count <= 3 else 4
+        buckets[index] += _int(row["n"])
+    labels = {0: "0 种", 1: "1 种", 2: "2 种", 3: "3 种", 4: "≥4 种"}
+    low = buckets[0] + buckets[1]
+    mid = buckets[2] + buckets[3]
+    high = buckets[4]
+    return {
+        "totalSamples": 0,  # 由调用方补真实明细行数
+        "validSamples": valid,
+        "source": f"table:{STRATUM_AGG_TABLE}",
+        "distribution": [
             {
-                "chronicCount": count,
-                "label": label,
-                "samples": _int(samples),
-                "share": _ratio(samples, valid),
+                "chronicCount": index,
+                "label": labels[index],
+                "samples": buckets[index],
+                "share": _ratio(buckets[index], valid),
             }
-            for count, label, samples in buckets
-        ]
-        low = _int(row["c0"]) + _int(row["c1"])
-        mid = _int(row["c2"]) + _int(row["c3"])
-        high = _int(row["c4"])
-        payload["levels"] = [
+            for index in (0, 1, 2, 3, 4)
+        ],
+        "levels": [
             {"level": "低风险", "rule": "慢病数 0-1 种", "samples": low, "share": _ratio(low, valid)},
             {"level": "中风险", "rule": "慢病数 2-3 种", "samples": mid, "share": _ratio(mid, valid)},
             {"level": "高风险", "rule": "慢病数 ≥4 种", "samples": high, "share": _ratio(high, valid)},
-        ]
-        payload["multimorbidityRate"] = _ratio(mid + high, valid)
-        payload["byAge"] = [
+        ],
+        "multimorbidityRate": _ratio(multimorbidity, valid),
+        "byAge": [
             {
-                "ageGrp": _int(r["age_grp"]),
-                "ageLabel": AGE_GROUP_LABELS.get(_int(r["age_grp"]), str(_int(r["age_grp"]))),
-                "samples": _int(r["samples"]),
-                "multimorbidityCases": _int(r["mm_cases"]),
-                "multimorbidityRate": _ratio(r["mm_cases"], r["mm_valid"]),
+                "ageGrp": _int(r["stratum_code"]),
+                "ageLabel": AGE_GROUP_LABELS.get(_int(r["stratum_code"]), str(_int(r["stratum_code"]))),
+                "samples": _int(r["n"]),
+                "multimorbidityCases": _int(r["mm"]),
+                "multimorbidityRate": _ratio(r["mm"], r["n"]),
             }
-            for r in age_rows
-        ]
+            for r in ages
+        ],
+    }
+
+
+def _stratify_from_fact(columns: Sequence[str]) -> dict[str, Any]:
+    """兜底路径：从 fact_brfss 聚合（agg 表缺失时使用，需两次全表扫描）。"""
+    payload: dict[str, Any] = {
+        "totalSamples": 0,
+        "validSamples": 0,
+        "source": "fact_brfss",
+        "distribution": [],
+        "levels": [],
+        "byAge": [],
+    }
+    if "chronic_count" not in columns:
+        payload["note"] = "库中缺少 chronic_count 字段，无法分层"
         return payload
+    sql = f"""
+        SELECT
+            SUM(CASE WHEN chronic_count = 0 THEN 1 ELSE 0 END) AS c0,
+            SUM(CASE WHEN chronic_count = 1 THEN 1 ELSE 0 END) AS c1,
+            SUM(CASE WHEN chronic_count = 2 THEN 1 ELSE 0 END) AS c2,
+            SUM(CASE WHEN chronic_count = 3 THEN 1 ELSE 0 END) AS c3,
+            SUM(CASE WHEN chronic_count >= 4 THEN 1 ELSE 0 END) AS c4,
+            COUNT(*) AS total,
+            COUNT(chronic_count) AS valid
+        FROM {FACT_TABLE}
+    """
+    by_age_sql = None
+    if "age_grp" in columns and "multimorbidity" in columns:
+        by_age_sql = f"""
+            SELECT age_grp AS age_grp,
+                   COUNT(*) AS samples,
+                   SUM(CASE WHEN multimorbidity = 1 THEN 1 ELSE 0 END) AS mm_cases,
+                   COUNT(multimorbidity) AS mm_valid
+            FROM {FACT_TABLE}
+            WHERE age_grp IS NOT NULL
+            GROUP BY age_grp
+            ORDER BY age_grp
+        """
+    with connection() as conn:
+        row = conn.execute(sql).fetchone()
+        age_rows = conn.execute(by_age_sql).fetchall() if by_age_sql else []
+    total = _int(row["total"])
+    valid = _int(row["valid"])
+    if total == 0:
+        return payload
+    buckets = [
+        (0, "0 种", row["c0"]),
+        (1, "1 种", row["c1"]),
+        (2, "2 种", row["c2"]),
+        (3, "3 种", row["c3"]),
+        (4, "≥4 种", row["c4"]),
+    ]
+    payload["totalSamples"] = total
+    payload["validSamples"] = valid
+    payload["distribution"] = [
+        {
+            "chronicCount": count,
+            "label": label,
+            "samples": _int(samples),
+            "share": _ratio(samples, valid),
+        }
+        for count, label, samples in buckets
+    ]
+    low = _int(row["c0"]) + _int(row["c1"])
+    mid = _int(row["c2"]) + _int(row["c3"])
+    high = _int(row["c4"])
+    payload["levels"] = [
+        {"level": "低风险", "rule": "慢病数 0-1 种", "samples": low, "share": _ratio(low, valid)},
+        {"level": "中风险", "rule": "慢病数 2-3 种", "samples": mid, "share": _ratio(mid, valid)},
+        {"level": "高风险", "rule": "慢病数 ≥4 种", "samples": high, "share": _ratio(high, valid)},
+    ]
+    payload["multimorbidityRate"] = _ratio(mid + high, valid)
+    payload["byAge"] = [
+        {
+            "ageGrp": _int(r["age_grp"]),
+            "ageLabel": AGE_GROUP_LABELS.get(_int(r["age_grp"]), str(_int(r["age_grp"]))),
+            "samples": _int(r["samples"]),
+            "multimorbidityCases": _int(r["mm_cases"]),
+            "multimorbidityRate": _ratio(r["mm_cases"], r["mm_valid"]),
+        }
+        for r in age_rows
+    ]
+    return payload
+
+
+def stratify() -> dict[str, Any]:
+    """共病数量分布、风险等级分布与年龄组共病率。
+
+    数据来源优先级：物化表 agg_risk_stratum（32 行，毫秒级）→ fact_brfss 直算（兜底）。
+    """
+
+    def build() -> dict[str, Any]:
+        columns = _require_db()
+        payload = _stratify_from_agg()
+        if payload is not None:
+            payload["totalSamples"] = _total_samples(None, columns)
+            return payload
+        return _stratify_from_fact(columns)
 
     return cached("stratify", (), build)
 

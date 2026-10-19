@@ -162,11 +162,52 @@ def test_risk_factors_prefers_aggregate_table(client, sample_db):
 
 def test_risk_stratify_distribution_consistent(client, sample_db, rows):
     data = client.get("/api/v1/risk/stratify").json()["data"]
+    assert data["source"] == "fact_brfss"  # 样例库 agg 表为空 → 走明细表直算
     assert data["totalSamples"] == len(rows)
     assert sum(item["samples"] for item in data["distribution"]) == len(rows)
     assert sum(item["samples"] for item in data["levels"]) == len(rows)
     assert [level["level"] for level in data["levels"]] == ["低风险", "中风险", "高风险"]
     assert data["byAge"] and all("multimorbidityRate" in item for item in data["byAge"])
+
+
+def test_risk_stratify_prefers_aggregate_table(client, sample_db, rows):
+    """物化表有数据时优先用 agg_risk_stratum，分层/等级/年龄组同口径。"""
+    import sqlite3
+
+    conn = sqlite3.connect(sample_db)
+    conn.executemany(
+        "INSERT INTO agg_risk_stratum "
+        "(dimension, stratum_code, stratum_label, n, n_multimorbidity, multimorbidity_rate) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        [
+            ("chronic_count", 0, "0", 10, 0, 0.0),
+            ("chronic_count", 1, "1", 5, 0, 0.0),
+            ("chronic_count", 2, "2", 4, 4, 1.0),
+            ("chronic_count", 5, "5", 1, 1, 1.0),
+            ("age_grp", 5, "Age 40 to 44", 20, 5, 0.25),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+    data = client.get("/api/v1/risk/stratify").json()["data"]
+    assert data["source"] == "table:agg_risk_stratum"
+    assert data["validSamples"] == 20
+    assert data["totalSamples"] == len(rows)
+    distribution = {item["chronicCount"]: item["samples"] for item in data["distribution"]}
+    assert distribution == {0: 10, 1: 5, 2: 4, 3: 0, 4: 1}
+    levels = {item["level"]: item["samples"] for item in data["levels"]}
+    assert levels == {"低风险": 15, "中风险": 4, "高风险": 1}
+    assert data["multimorbidityRate"] == round(5 / 20, 6)
+    assert data["byAge"] == [
+        {
+            "ageGrp": 5,
+            "ageLabel": "40-44",
+            "samples": 20,
+            "multimorbidityCases": 5,
+            "multimorbidityRate": 0.25,
+        }
+    ]
 
 
 def test_geo_states_covers_all_states(client, sample_db, rows):
