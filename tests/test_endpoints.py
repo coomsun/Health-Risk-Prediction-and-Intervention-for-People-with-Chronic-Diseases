@@ -98,20 +98,66 @@ def test_trend_supports_multiple_metrics(client, sample_db):
         assert payload["data"]["series"]
 
 
+RISK_FACTOR_KEYS = {
+    "checkup_over_1y",
+    "cost_barrier",
+    "current_smoker",
+    "diff_walk",
+    "fair_poor_health",
+    "heavy_drink",
+    "no_personal_doctor",
+    "no_phys_activity",
+    "obese",
+}
+
+
 def test_risk_factors_exposure_rates(client, sample_db, rows):
     data = client.get("/api/v1/risk/factors", params={"year": 2022}).json()["data"]
     subset = [r for r in rows if r["year"] == 2022]
     assert data["totalSamples"] == len(subset)
+    assert data["source"] == "fact_brfss"  # 样例库 agg 表为空 → 走明细表直算
     by_key = {item["key"]: item for item in data["items"]}
-    assert len(by_key) == 10
+    assert set(by_key) == RISK_FACTOR_KEYS  # 与 agg_risk_factor 的 9 项一一对应
     expected_obese = sum(1 for r in subset if r["bmi"] >= 30)
     assert by_key["obese"]["exposed"] == expected_obese
     assert by_key["obese"]["rate"] == round(expected_obese / len(subset), 6)
     # 统一 0/1 约定：heavy_drink=1 为酗酒；phys_activity=0 为缺乏运动
-    expected_drink = sum(1 for r in subset if r["heavy_drink"] == 1)
-    assert by_key["heavy_drink"]["exposed"] == expected_drink
-    expected_inactive = sum(1 for r in subset if r["phys_activity"] == 0)
-    assert by_key["no_physical_activity"]["exposed"] == expected_inactive
+    assert by_key["heavy_drink"]["exposed"] == sum(1 for r in subset if r["heavy_drink"] == 1)
+    assert by_key["no_phys_activity"]["exposed"] == sum(1 for r in subset if r["phys_activity"] == 0)
+    # 就医行为：checkup > 1 为"一年以上未体检"（含从未体检），不是 checkup = 8
+    assert by_key["checkup_over_1y"]["exposed"] == sum(1 for r in subset if r["checkup"] > 1)
+
+
+def test_risk_factors_prefers_aggregate_table(client, sample_db):
+    """物化表有数据时优先用 agg_risk_factor，9 项口径与建库脚本保持一致。"""
+    import sqlite3
+
+    conn = sqlite3.connect(sample_db)
+    conn.executemany(
+        "INSERT INTO agg_risk_factor "
+        "(year, risk_factor, risk_label_cn, level_label, n_valid, n_positive, exposure_rate) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            (2022, "obese", "肥胖（BMI≥30）", None, 1000, 333, 0.333),
+            (2023, "obese", "肥胖（BMI≥30）", None, 500, 120, 0.24),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+    data = client.get("/api/v1/risk/factors", params={"year": 2022}).json()["data"]
+    assert data["source"] == "table:agg_risk_factor"
+    assert len(data["items"]) == 1
+    item = data["items"][0]
+    assert item["key"] == "obese"
+    assert item["exposed"] == 333
+    assert item["validSamples"] == 1000
+    assert item["rate"] == 0.333
+
+    merged = client.get("/api/v1/risk/factors").json()["data"]
+    assert merged["items"][0]["exposed"] == 453  # 不分年份时按分子之和合并
+    assert merged["items"][0]["validSamples"] == 1500
+    assert merged["items"][0]["rate"] == round(453 / 1500, 6)
 
 
 def test_risk_stratify_distribution_consistent(client, sample_db, rows):

@@ -333,9 +333,24 @@ for _field, _key, _label in DISEASES:
     TREND_METRICS[f"{_key}_rate"] = _disease_metric(_field, f"{_key}_rate", _label)
 
 
-#: 可干预危险因素暴露定义（SQL 表达式；字段口径见 _设计规格.md 第 2 节）
+#: 可干预危险因素（9 项，key 与库内 agg_risk_factor.risk_factor 一一对应，
+#: 顺序也与其 ORDER BY risk_factor 一致；SQL 表达式用于 agg 表缺失时从 fact_brfss 直算）
 RISK_FACTORS: tuple[tuple[str, str, str, str, str], ...] = (
-    ("obese", "肥胖（BMI≥30）", "SUM(CASE WHEN bmi >= 30 THEN 1 ELSE 0 END)", "COUNT(bmi)", "bmi"),
+    (
+        "checkup_over_1y",
+        "一年以上未做常规体检（含从未体检）",
+        # CHECKUP1：1=一年内 / 2=两年内 / 3=五年内 / 4=五年以上 / 8=从未 → >1 即"一年以上未体检"
+        "SUM(CASE WHEN checkup > 1 THEN 1 ELSE 0 END)",
+        "COUNT(checkup)",
+        "checkup",
+    ),
+    (
+        "cost_barrier",
+        "因费用而未就医",
+        "SUM(CASE WHEN medcost = 1 THEN 1 ELSE 0 END)",
+        "COUNT(medcost)",
+        "medcost",
+    ),
     (
         "current_smoker",
         "现在吸烟（每日/部分日）",
@@ -344,12 +359,18 @@ RISK_FACTORS: tuple[tuple[str, str, str, str, str], ...] = (
         "smoker3",
     ),
     (
-        "no_physical_activity",
-        "过去30天无体育锻炼",
-        # 统一 0/1 约定：phys_activity 1=有运动、0=无，暴露取 0
-        "SUM(CASE WHEN phys_activity = 0 THEN 1 ELSE 0 END)",
-        "COUNT(phys_activity)",
-        "phys_activity",
+        "diff_walk",
+        "行走困难",
+        "SUM(CASE WHEN diffwalk = 1 THEN 1 ELSE 0 END)",
+        "COUNT(diffwalk)",
+        "diffwalk",
+    ),
+    (
+        "fair_poor_health",
+        "自评健康一般或差（GENHLTH≥4）",
+        "SUM(CASE WHEN genhlth >= 4 THEN 1 ELSE 0 END)",
+        "COUNT(genhlth)",
+        "genhlth",
     ),
     (
         "heavy_drink",
@@ -360,34 +381,6 @@ RISK_FACTORS: tuple[tuple[str, str, str, str, str], ...] = (
         "heavy_drink",
     ),
     (
-        "fair_or_poor_health",
-        "自评健康一般或差（GENHLTH≥4）",
-        "SUM(CASE WHEN genhlth >= 4 THEN 1 ELSE 0 END)",
-        "COUNT(genhlth)",
-        "genhlth",
-    ),
-    (
-        "frequent_mental_distress",
-        "近30天心理不良≥14天",
-        "SUM(CASE WHEN menthlth >= 14 THEN 1 ELSE 0 END)",
-        "COUNT(menthlth)",
-        "menthlth",
-    ),
-    (
-        "cost_barrier",
-        "因费用而未就医",
-        "SUM(CASE WHEN medcost = 1 THEN 1 ELSE 0 END)",
-        "COUNT(medcost)",
-        "medcost",
-    ),
-    (
-        "never_checkup",
-        "从未做过常规体检",
-        "SUM(CASE WHEN checkup = 8 THEN 1 ELSE 0 END)",
-        "COUNT(checkup)",
-        "checkup",
-    ),
-    (
         "no_personal_doctor",
         "无固定就诊医生（PERSDOC3=3）",
         "SUM(CASE WHEN persdoc = 3 THEN 1 ELSE 0 END)",
@@ -395,11 +388,19 @@ RISK_FACTORS: tuple[tuple[str, str, str, str, str], ...] = (
         "persdoc",
     ),
     (
-        "walking_difficulty",
-        "行走困难",
-        "SUM(CASE WHEN diffwalk = 1 THEN 1 ELSE 0 END)",
-        "COUNT(diffwalk)",
-        "diffwalk",
+        "no_phys_activity",
+        "过去30天无体育锻炼",
+        # 统一 0/1 约定：phys_activity 1=有运动、0=无，暴露取 0
+        "SUM(CASE WHEN phys_activity = 0 THEN 1 ELSE 0 END)",
+        "COUNT(phys_activity)",
+        "phys_activity",
+    ),
+    (
+        "obese",
+        "肥胖（BMI≥30）",
+        "SUM(CASE WHEN bmi >= 30 THEN 1 ELSE 0 END)",
+        "COUNT(bmi)",
+        "bmi",
     ),
 )
 
@@ -636,43 +637,124 @@ def trend(metric: str = "multimorbidity_rate") -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------- 危险因素
+RISK_FACTOR_AGG_TABLE = "agg_risk_factor"
+
+
+def _total_samples(year: int | None, columns: Sequence[str]) -> int:
+    """命中明细表行数（仅用于回报当前过滤条件下的样本量）。"""
+    clauses: list[str] = []
+    params: list[Any] = []
+    if year is not None and "year" in columns:
+        clauses.append("year = ?")
+        params.append(year)
+    with connection() as conn:
+        row = conn.execute(f"SELECT COUNT(*) AS n FROM {FACT_TABLE}" + _where(clauses), params).fetchone()
+    return _int(row["n"])
+
+
+def _risk_factors_from_agg(year: int | None) -> list[dict[str, Any]] | None:
+    """优先读物化表 agg_risk_factor：9 项口径与建库脚本完全一致，且无需全表扫描。
+
+    不筛年份时按 分子之和/分母之和 合并（比率不能直接取平均）。
+    """
+    agg_columns = schema().get(RISK_FACTOR_AGG_TABLE, [])
+    required = {"risk_factor", "n_positive", "n_valid"}
+    if not required.issubset(set(agg_columns)):
+        return None
+    clauses: list[str] = []
+    params: list[Any] = []
+    if year is not None and "year" in agg_columns:
+        clauses.append("year = ?")
+        params.append(year)
+    label_expr = "MAX(risk_label_cn)" if "risk_label_cn" in agg_columns else "NULL"
+    sql = (
+        f"SELECT risk_factor AS risk_factor, SUM(n_positive) AS n_pos, "
+        f"SUM(n_valid) AS n_valid, {label_expr} AS label "
+        f"FROM {RISK_FACTOR_AGG_TABLE}{_where(clauses)} GROUP BY risk_factor ORDER BY risk_factor"
+    )
+    with connection() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    if not rows:
+        return None
+    known = {key: (name, field) for key, name, _n, _d, field in RISK_FACTORS}
+    items = []
+    for row in rows:
+        key = str(row["risk_factor"])
+        name, field = known.get(key, (str(row["label"] or key), None))
+        exposed = _int(row["n_pos"])
+        valid = _int(row["n_valid"])
+        items.append(
+            {
+                "key": key,
+                "name": name,
+                "field": field,
+                "exposed": exposed,
+                "validSamples": valid,
+                "rate": _ratio(exposed, valid),
+            }
+        )
+    return items
+
+
+def _risk_factors_from_fact(year: int | None, columns: Sequence[str]) -> list[dict[str, Any]] | None:
+    """agg 表缺失时的兜底：从 fact_brfss 一次性扫描算出同样 9 项。"""
+    available = [f for f in RISK_FACTORS if f[4] in columns]
+    if not available:
+        return None
+    clauses: list[str] = []
+    params: list[Any] = []
+    if year is not None and "year" in columns:
+        clauses.append("year = ?")
+        params.append(year)
+    select = ["COUNT(*) AS total_samples"]
+    for key, _name, numerator_sql, denominator_sql, _field in available:
+        select.append(f"{numerator_sql} AS n_{key}")
+        select.append(f"{denominator_sql} AS d_{key}")
+    sql = f"SELECT {', '.join(select)} FROM {FACT_TABLE}" + _where(clauses)
+    with connection() as conn:
+        row = conn.execute(sql, params).fetchone()
+    if _int(row["total_samples"]) == 0:
+        return None
+    items = []
+    for key, name, _numerator_sql, _denominator_sql, field in available:
+        exposed = _int(row[f"n_{key}"])
+        valid = _int(row[f"d_{key}"])
+        items.append(
+            {
+                "key": key,
+                "name": name,
+                "field": field,
+                "exposed": exposed,
+                "validSamples": valid,
+                "rate": _ratio(exposed, valid),
+            }
+        )
+    return items
+
+
 def risk_factors(year: int | None = None) -> dict[str, Any]:
-    """可干预危险因素的暴露率（单次全表扫描算出全部指标）。"""
+    """9 项可干预危险因素暴露率。
+
+    数据来源优先级：物化表 agg_risk_factor（与建库脚本同口径，9 项一一对应）
+    → 缺表/空表时从 fact_brfss 直算（谓词与 agg 表完全一致）。
+    """
 
     def build() -> dict[str, Any]:
         filters = {"year": year}
         columns = _require_db()
-        available = [f for f in RISK_FACTORS if f[4] in columns]
-        clauses: list[str] = []
-        params: list[Any] = []
-        if year is not None and "year" in columns:
-            clauses.append("year = ?")
-            params.append(year)
-        select = ["COUNT(*) AS total_samples"]
-        for key, _name, numerator_sql, denominator_sql, _field in available:
-            select.append(f"{numerator_sql} AS n_{key}")
-            select.append(f"{denominator_sql} AS d_{key}")
-        sql = f"SELECT {', '.join(select)} FROM {FACT_TABLE}" + _where(clauses)
-        with connection() as conn:
-            row = conn.execute(sql, params).fetchone()
-        total = _int(row["total_samples"])
-        if total == 0:
-            return {"filters": filters, "totalSamples": 0, "items": []}
-        items = []
-        for key, name, _numerator_sql, _denominator_sql, field in available:
-            exposed = _int(row[f"n_{key}"])
-            valid = _int(row[f"d_{key}"])
-            items.append(
-                {
-                    "key": key,
-                    "name": name,
-                    "field": field,
-                    "exposed": exposed,
-                    "validSamples": valid,
-                    "rate": _ratio(exposed, valid),
-                }
-            )
-        return {"filters": filters, "totalSamples": total, "items": items}
+        items = _risk_factors_from_agg(year)
+        source = "table:agg_risk_factor"
+        if items is None:
+            items = _risk_factors_from_fact(year, columns)
+            source = "fact_brfss"
+        if items is None:
+            return {"filters": filters, "source": source, "totalSamples": 0, "items": []}
+        return {
+            "filters": filters,
+            "source": source,
+            "totalSamples": _total_samples(year, columns),
+            "items": items,
+        }
 
     return cached("risk_factors", (year,), build)
 

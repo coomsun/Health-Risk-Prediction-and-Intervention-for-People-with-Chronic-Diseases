@@ -138,7 +138,7 @@ D:\期末作业\.venv\Scripts\python.exe -m pytest tests -q     # 期望：30 pa
 | 2 | GET | /api/v1/overview | 总览 KPI（总样本、年份跨度、共病率、人均慢病数） |
 | 3 | GET | /api/v1/chronic/prevalence?year=&state= | 八种慢病患病率 |
 | 4 | GET | /api/v1/trend?metric= | 指标年度趋势（15 个可选指标） |
-| 5 | GET | /api/v1/risk/factors?year= | 10 项可干预危险因素暴露率 |
+| 5 | GET | /api/v1/risk/factors?year= | 9 项可干预危险因素暴露率（key 与库表 agg_risk_factor 一一对应） |
 | 6 | GET | /api/v1/risk/stratify | 风险分层分布（慢病数分布 / 等级 / 年龄组） |
 | 7 | GET | /api/v1/geo/states?metric= | 州级指标（供地图） |
 | 8 | GET | /api/v1/model/metrics | 模型指标与对比 |
