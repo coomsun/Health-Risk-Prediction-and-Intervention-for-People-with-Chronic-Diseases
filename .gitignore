@@ -46,3 +46,7 @@ artifacts/model/*.parquet
 
 # ===== 本地环境变量（含密钥，禁止入库）=====
 .env
+
+# ===== 浏览器驱动二进制（体积大，按需下载）=====
+crawler/drivers/*.exe
+crawler/drivers/*.zip
