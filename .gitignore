@@ -1,0 +1,42 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ===== 数据（原始数据不纳入版本库，重建方式见 README「数据获取与重建」）=====
+data/raw/
+data/processed/
+_tmp_brfss/
+
+# ===== 数据库产物（由 pipeline/06_build_db.py 生成，可用脚本重建）=====
+db/*.db
+db/*.db-journal
+db/*.db-wal
+db/*.db-shm
+
+# ===== 图表与模型二进制（由 pipeline 生成，体积大且可重建）=====
+artifacts/figures/*.png
+artifacts/figures/*.svg
+artifacts/model/*.joblib
+artifacts/model/*.pkl
+artifacts/model/*.txt
+
+# ===== 日志与临时文件 =====
+*.log
+logs/
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# ===== 编辑器 =====
+.vscode/
+.idea/
+*.swp
