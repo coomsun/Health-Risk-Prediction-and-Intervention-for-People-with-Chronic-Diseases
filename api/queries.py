@@ -461,7 +461,6 @@ def overview() -> dict[str, Any]:
             "multimorbidityRate": None,
             "avgChronicCount": None,
             "diabetesPrevalence": None,
-            "dbUpdatedAt": None,
         }
         columns = _require_db()
         parts = ["COUNT(*) AS total_samples"]
@@ -784,9 +783,10 @@ def _state_names() -> dict[int, str]:
             continue
         if names:
             break
-    if not names:
-        names = dict(STATE_FIPS_NAMES)
-    return names
+    # 库内 dim 表可能只覆盖部分州，缺的用参考字典补齐，避免地图出现裸数字
+    merged = dict(STATE_FIPS_NAMES)
+    merged.update(names)
+    return merged
 
 
 def geo_states(metric: str = "multimorbidity_rate") -> dict[str, Any]:

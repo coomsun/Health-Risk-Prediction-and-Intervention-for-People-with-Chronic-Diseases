@@ -159,7 +159,12 @@ def install(app: FastAPI) -> None:
     @app.exception_handler(StarletteHTTPException)
     async def http_error_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         code = CODE_NOT_FOUND if exc.status_code == 404 else exc.status_code
-        message = exc.detail if isinstance(exc.detail, str) and exc.detail else ERROR_MESSAGES.get(code, "请求失败")
+        if code == CODE_NOT_FOUND:
+            message = f"{ERROR_MESSAGES[CODE_NOT_FOUND]}：{request.url.path}"
+        elif isinstance(exc.detail, str) and exc.detail:
+            message = exc.detail
+        else:
+            message = ERROR_MESSAGES.get(code, "请求失败")
         return _error_response(request, code, message, exc.status_code)
 
     @app.exception_handler(Exception)
