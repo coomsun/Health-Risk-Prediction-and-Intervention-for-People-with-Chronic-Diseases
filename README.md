@@ -156,6 +156,9 @@ D:\期末作业\.venv\Scripts\python.exe -m pytest tests -q     # 期望：30 pa
   （`https://huggingface.co/datasets/LoneWolfgang/brfss-llcp/resolve/main/data/LLCP{YYYY}.parquet`），
   五年行数与官方发布量级一致：418,268 / 401,958 / 438,693 / 445,132 / 433,323 = **2,137,374**。
   由于本机访问 cdc.gov 被 403 拦截，报告中已如实写明"经镜像获取同一批公开数据"这一事实。
+- **清洗后入库**：当前交付库 `fact_brfss` 共 **2,136,402** 行（原始 2,137,374 − 972 行，
+  差额来自清洗规则与主键唯一性约束，逐条原因见 docs/数据质量报告.md），
+  `/api/v1/health` 的 `data.factRows` 即为此实时行数。
 - **合规**：BRFSS 为**去标识化**公开统计数据，不含姓名、住址、证件号等个人身份信息，可自由用于研究与教学；
   本项目不对个体做任何形式的再识别尝试，不用于商业用途。
 - **原始数据不入库**：`data/raw/` 已在 `.gitignore` 中排除。重建方式：
