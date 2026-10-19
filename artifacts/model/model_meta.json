@@ -1,0 +1,50 @@
+{
+  "primary_model": "LightGBM_SetA",
+  "label": "multimorbidity",
+  "train_years": [
+    2019,
+    2020,
+    2021,
+    2022
+  ],
+  "test_year": 2023,
+  "n_train": 1703267,
+  "n_test": 433135,
+  "test_positive_rate": 0.18546411626859985,
+  "cv_auc_mean": 0.7814573048775577,
+  "cv_auc_std": 0.0011851922966198377,
+  "metrics": {
+    "auc_roc": 0.7740033076708457,
+    "auc_pr": 0.4595219026712015,
+    "f1": 0.46186068139279535,
+    "accuracy": 0.6820413958696481,
+    "recall": 0.735693567862967,
+    "brier": 0.20194245718366666,
+    "positive_rate_pred": 0.40538400267814884,
+    "model": "LightGBM_SetA",
+    "feature_set": "SetA",
+    "n_features": 19,
+    "fit_seconds": 20.8
+  },
+  "features": [
+    "year",
+    "state_fips",
+    "sex",
+    "age",
+    "race",
+    "hispanic",
+    "educa",
+    "income_grp",
+    "employ",
+    "marital",
+    "veteran",
+    "bmi",
+    "obese",
+    "smoker3",
+    "phys_activity",
+    "heavy_drink",
+    "medcost",
+    "checkup",
+    "persdoc"
+  ]
+}

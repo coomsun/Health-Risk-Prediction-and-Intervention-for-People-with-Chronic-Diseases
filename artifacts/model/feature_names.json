@@ -1,0 +1,27 @@
+{
+  "features": [
+    "year",
+    "state_fips",
+    "sex",
+    "age",
+    "race",
+    "hispanic",
+    "educa",
+    "income_grp",
+    "employ",
+    "marital",
+    "veteran",
+    "bmi",
+    "obese",
+    "smoker3",
+    "phys_activity",
+    "heavy_drink",
+    "medcost",
+    "checkup",
+    "persdoc"
+  ],
+  "set": "A",
+  "label": "multimorbidity",
+  "model": "LightGBM",
+  "note": "Set-A 可干预特征集，无标签泄漏；原生支持缺失值"
+}

@@ -1,0 +1,89 @@
+{
+  "cv_auc_scores": [
+    0.7822983213873308,
+    0.7817136297824594,
+    0.7794799610069649,
+    0.7809090496283131,
+    0.7828855625827202
+  ],
+  "results": [
+    {
+      "auc_roc": 0.7447028694038899,
+      "auc_pr": 0.40825798204141794,
+      "f1": 0.4342510574953205,
+      "accuracy": 0.6455100603737864,
+      "recall": 0.7335524268339745,
+      "brier": 0.2186901867389679,
+      "positive_rate_pred": 0.4411211285165133,
+      "model": "LogisticRegression_SetA",
+      "feature_set": "SetA",
+      "n_features": 19,
+      "fit_seconds": 4.3
+    },
+    {
+      "auc_roc": 0.7683048217196878,
+      "auc_pr": 0.45049593235634794,
+      "f1": 0.4639492670373604,
+      "accuracy": 0.7037528715065742,
+      "recall": 0.6912399945226625,
+      "brier": 0.19281345736717073,
+      "positive_rate_pred": 0.3671834416521408,
+      "model": "RandomForest_SetA",
+      "feature_set": "SetA",
+      "n_features": 19,
+      "fit_seconds": 48.4
+    },
+    {
+      "auc_roc": 0.7740033076708457,
+      "auc_pr": 0.4595219026712015,
+      "f1": 0.46186068139279535,
+      "accuracy": 0.6820413958696481,
+      "recall": 0.735693567862967,
+      "brier": 0.20194245718366666,
+      "positive_rate_pred": 0.40538400267814884,
+      "model": "LightGBM_SetA",
+      "feature_set": "SetA",
+      "n_features": 19,
+      "fit_seconds": 20.8
+    },
+    {
+      "auc_roc": 0.8031402280677555,
+      "auc_pr": 0.5031679248880663,
+      "f1": 0.4948597116853022,
+      "accuracy": 0.7151488565920556,
+      "recall": 0.7523123078263684,
+      "brier": 0.19414418935775757,
+      "positive_rate_pred": 0.3784409017973611,
+      "model": "LogisticRegression_SetB",
+      "feature_set": "SetB",
+      "n_features": 24,
+      "fit_seconds": 8.5
+    },
+    {
+      "auc_roc": 0.8150773593503824,
+      "auc_pr": 0.5224952308367851,
+      "f1": 0.5106199423710682,
+      "accuracy": 0.7380678079582578,
+      "recall": 0.736801483860527,
+      "brier": 0.17575821067293454,
+      "positive_rate_pred": 0.3497685479123137,
+      "model": "RandomForest_SetB",
+      "feature_set": "SetB",
+      "n_features": 24,
+      "fit_seconds": 62.1
+    },
+    {
+      "auc_roc": 0.8201954933713492,
+      "auc_pr": 0.5324198874073385,
+      "f1": 0.5058881454158023,
+      "accuracy": 0.7173306244011682,
+      "recall": 0.7802218321693991,
+      "brier": 0.18425537780707513,
+      "positive_rate_pred": 0.3866115645237628,
+      "model": "LightGBM_SetB",
+      "feature_set": "SetB",
+      "n_features": 24,
+      "fit_seconds": 25.8
+    }
+  ]
+}

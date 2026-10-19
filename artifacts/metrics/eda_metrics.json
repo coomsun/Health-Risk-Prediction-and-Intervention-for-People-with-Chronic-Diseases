@@ -1,0 +1,2013 @@
+{
+  "generated_at": "2026-10-19T20:02:08+08:00",
+  "engine": "pyspark 4.2.0 (local[8])",
+  "source": "data/processed/brfss_clean.parquet（由 02_clean_spark.py 生成）",
+  "n_total": 2136402,
+  "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+  ],
+  "n_by_year": {
+    "2019": 418129,
+    "2020": 401758,
+    "2021": 438457,
+    "2022": 444923,
+    "2023": 433135
+  },
+  "overall_prevalence": {
+    "has_diabetes": {
+      "name_cn": "糖尿病",
+      "n_positive": 288055,
+      "n_valid": 2132659,
+      "rate": 0.135068,
+      "ci95": [
+        0.13461,
+        0.135527
+      ]
+    },
+    "has_mi": {
+      "name_cn": "心肌梗死",
+      "n_positive": 117717,
+      "n_valid": 2124512,
+      "rate": 0.055409,
+      "ci95": [
+        0.055101,
+        0.055717
+      ]
+    },
+    "has_chd": {
+      "name_cn": "冠心病",
+      "n_positive": 118932,
+      "n_valid": 2117151,
+      "rate": 0.056175,
+      "ci95": [
+        0.055865,
+        0.056486
+      ]
+    },
+    "has_stroke": {
+      "name_cn": "卒中",
+      "n_positive": 89224,
+      "n_valid": 2130418,
+      "rate": 0.041881,
+      "ci95": [
+        0.041612,
+        0.04215
+      ]
+    },
+    "has_copd": {
+      "name_cn": "慢阻肺",
+      "n_positive": 169792,
+      "n_valid": 2126751,
+      "rate": 0.079836,
+      "ci95": [
+        0.079472,
+        0.080201
+      ]
+    },
+    "has_asthma": {
+      "name_cn": "哮喘",
+      "n_positive": 305625,
+      "n_valid": 2129278,
+      "rate": 0.143535,
+      "ci95": [
+        0.143064,
+        0.144006
+      ]
+    },
+    "has_kidney": {
+      "name_cn": "慢性肾病",
+      "n_positive": 89262,
+      "n_valid": 2128620,
+      "rate": 0.041934,
+      "ci95": [
+        0.041665,
+        0.042203
+      ]
+    },
+    "has_depression": {
+      "name_cn": "抑郁障碍",
+      "n_positive": 419958,
+      "n_valid": 2125072,
+      "rate": 0.197621,
+      "ci95": [
+        0.197085,
+        0.198156
+      ]
+    },
+    "multimorbidity": {
+      "name_cn": "共病（慢病数≥2）",
+      "n_positive": 386760,
+      "n_valid": 2136402,
+      "rate": 0.181033,
+      "ci95": [
+        0.180517,
+        0.18155
+      ]
+    }
+  },
+  "yearly_prevalence": {
+    "2019": {
+      "n": 418129,
+      "has_diabetes": {
+        "n_valid": 417423,
+        "n_positive": 57401,
+        "rate": 0.137513
+      },
+      "has_mi": {
+        "n_valid": 415777,
+        "n_positive": 24370,
+        "rate": 0.058613
+      },
+      "has_chd": {
+        "n_valid": 414258,
+        "n_positive": 23438,
+        "rate": 0.056578
+      },
+      "has_stroke": {
+        "n_valid": 416958,
+        "n_positive": 18745,
+        "rate": 0.044957
+      },
+      "has_copd": {
+        "n_valid": 415992,
+        "n_positive": 35427,
+        "rate": 0.085163
+      },
+      "has_asthma": {
+        "n_valid": 416759,
+        "n_positive": 58921,
+        "rate": 0.141379
+      },
+      "has_kidney": {
+        "n_valid": 416661,
+        "n_positive": 16276,
+        "rate": 0.039063
+      },
+      "has_depression": {
+        "n_valid": 415985,
+        "n_positive": 79181,
+        "rate": 0.190346
+      },
+      "multimorbidity": {
+        "n_valid": 418129,
+        "n_positive": 76214,
+        "rate": 0.182274
+      },
+      "chronic_count_mean": 0.7504,
+      "chronic_count_ge3_rate": 0.072468
+    },
+    "2020": {
+      "n": 401758,
+      "has_diabetes": {
+        "n_valid": 401144,
+        "n_positive": 52094,
+        "rate": 0.129864
+      },
+      "has_mi": {
+        "n_valid": 399875,
+        "n_positive": 21957,
+        "rate": 0.05491
+      },
+      "has_chd": {
+        "n_valid": 398656,
+        "n_positive": 22598,
+        "rate": 0.056685
+      },
+      "has_stroke": {
+        "n_valid": 400772,
+        "n_positive": 15677,
+        "rate": 0.039117
+      },
+      "has_copd": {
+        "n_valid": 400003,
+        "n_positive": 31443,
+        "rate": 0.078607
+      },
+      "has_asthma": {
+        "n_valid": 400591,
+        "n_positive": 54142,
+        "rate": 0.135155
+      },
+      "has_kidney": {
+        "n_valid": 400442,
+        "n_positive": 15015,
+        "rate": 0.037496
+      },
+      "has_depression": {
+        "n_valid": 399855,
+        "n_positive": 75820,
+        "rate": 0.189619
+      },
+      "multimorbidity": {
+        "n_valid": 401758,
+        "n_positive": 69151,
+        "rate": 0.172121
+      },
+      "chronic_count_mean": 0.7187,
+      "chronic_count_ge3_rate": 0.066689
+    },
+    "2021": {
+      "n": 438457,
+      "has_diabetes": {
+        "n_valid": 437708,
+        "n_positive": 57616,
+        "rate": 0.131631
+      },
+      "has_mi": {
+        "n_valid": 436038,
+        "n_positive": 22831,
+        "rate": 0.05236
+      },
+      "has_chd": {
+        "n_valid": 434418,
+        "n_positive": 22891,
+        "rate": 0.052693
+      },
+      "has_stroke": {
+        "n_valid": 437264,
+        "n_positive": 17213,
+        "rate": 0.039365
+      },
+      "has_copd": {
+        "n_valid": 436586,
+        "n_positive": 34169,
+        "rate": 0.078264
+      },
+      "has_asthma": {
+        "n_valid": 436947,
+        "n_positive": 61502,
+        "rate": 0.140754
+      },
+      "has_kidney": {
+        "n_valid": 436880,
+        "n_positive": 17101,
+        "rate": 0.039143
+      },
+      "has_depression": {
+        "n_valid": 436176,
+        "n_positive": 85398,
+        "rate": 0.195788
+      },
+      "multimorbidity": {
+        "n_valid": 438457,
+        "n_positive": 76624,
+        "rate": 0.174758
+      },
+      "chronic_count_mean": 0.7269,
+      "chronic_count_ge3_rate": 0.066228
+    },
+    "2022": {
+      "n": 444923,
+      "has_diabetes": {
+        "n_valid": 444045,
+        "n_positive": 61158,
+        "rate": 0.137729
+      },
+      "has_mi": {
+        "n_valid": 442067,
+        "n_positive": 25108,
+        "rate": 0.056797
+      },
+      "has_chd": {
+        "n_valid": 440727,
+        "n_positive": 26551,
+        "rate": 0.060244
+      },
+      "has_stroke": {
+        "n_valid": 443575,
+        "n_positive": 19239,
+        "rate": 0.043373
+      },
+      "has_copd": {
+        "n_valid": 442913,
+        "n_positive": 35656,
+        "rate": 0.080503
+      },
+      "has_asthma": {
+        "n_valid": 443359,
+        "n_positive": 66694,
+        "rate": 0.150429
+      },
+      "has_kidney": {
+        "n_valid": 443206,
+        "n_positive": 20315,
+        "rate": 0.045836
+      },
+      "has_depression": {
+        "n_valid": 442320,
+        "n_positive": 91410,
+        "rate": 0.20666
+      },
+      "multimorbidity": {
+        "n_valid": 444923,
+        "n_positive": 84440,
+        "rate": 0.189786
+      },
+      "chronic_count_mean": 0.778,
+      "chronic_count_ge3_rate": 0.07384
+    },
+    "2023": {
+      "n": 433135,
+      "has_diabetes": {
+        "n_valid": 432339,
+        "n_positive": 59786,
+        "rate": 0.138285
+      },
+      "has_mi": {
+        "n_valid": 430755,
+        "n_positive": 23451,
+        "rate": 0.054442
+      },
+      "has_chd": {
+        "n_valid": 429092,
+        "n_positive": 23454,
+        "rate": 0.05466
+      },
+      "has_stroke": {
+        "n_valid": 431849,
+        "n_positive": 18350,
+        "rate": 0.042492
+      },
+      "has_copd": {
+        "n_valid": 431257,
+        "n_positive": 33097,
+        "rate": 0.076745
+      },
+      "has_asthma": {
+        "n_valid": 431622,
+        "n_positive": 64366,
+        "rate": 0.149126
+      },
+      "has_kidney": {
+        "n_valid": 431431,
+        "n_positive": 20555,
+        "rate": 0.047644
+      },
+      "has_depression": {
+        "n_valid": 430736,
+        "n_positive": 88149,
+        "rate": 0.204647
+      },
+      "multimorbidity": {
+        "n_valid": 433135,
+        "n_positive": 80331,
+        "rate": 0.185464
+      },
+      "chronic_count_mean": 0.7647,
+      "chronic_count_ge3_rate": 0.070862
+    }
+  },
+  "chronic_count_dist": {
+    "overall": {
+      "0": 1159621,
+      "1": 590021,
+      "2": 237082,
+      "3": 92682,
+      "4": 36774,
+      "5": 13973,
+      "6": 4641,
+      "7": 1337,
+      "8": 271
+    },
+    "overall_pct": {
+      "0": 54.2792,
+      "1": 27.6175,
+      "2": 11.0973,
+      "3": 4.3382,
+      "4": 1.7213,
+      "5": 0.654,
+      "6": 0.2172,
+      "7": 0.0626,
+      "8": 0.0127
+    },
+    "by_year": {
+      "2019": {
+        "0": 228615,
+        "1": 113300,
+        "2": 45913,
+        "3": 18527,
+        "4": 7529,
+        "5": 2924,
+        "6": 990,
+        "7": 272,
+        "8": 59
+      },
+      "2020": {
+        "0": 224351,
+        "1": 108256,
+        "2": 42358,
+        "3": 16627,
+        "4": 6462,
+        "5": 2555,
+        "6": 833,
+        "7": 256,
+        "8": 60
+      },
+      "2021": {
+        "0": 241373,
+        "1": 120460,
+        "2": 47586,
+        "3": 18212,
+        "4": 7112,
+        "5": 2610,
+        "6": 817,
+        "7": 243,
+        "8": 44
+      },
+      "2022": {
+        "0": 235175,
+        "1": 125308,
+        "2": 51587,
+        "3": 20112,
+        "4": 8215,
+        "5": 3104,
+        "6": 1080,
+        "7": 283,
+        "8": 59
+      },
+      "2023": {
+        "0": 230107,
+        "1": 122697,
+        "2": 49638,
+        "3": 19204,
+        "4": 7456,
+        "5": 2780,
+        "6": 921,
+        "7": 283,
+        "8": 49
+      }
+    }
+  },
+  "strata": {
+    "age_grp": [
+      {
+        "code": 1,
+        "label": "18-24",
+        "n": 129985,
+        "n_multimorbidity": 10908,
+        "rate": 0.083917
+      },
+      {
+        "code": 2,
+        "label": "25-29",
+        "n": 106582,
+        "n_multimorbidity": 9654,
+        "rate": 0.090578
+      },
+      {
+        "code": 3,
+        "label": "30-34",
+        "n": 122791,
+        "n_multimorbidity": 11789,
+        "rate": 0.096009
+      },
+      {
+        "code": 4,
+        "label": "35-39",
+        "n": 134432,
+        "n_multimorbidity": 13659,
+        "rate": 0.101605
+      },
+      {
+        "code": 5,
+        "label": "40-44",
+        "n": 137793,
+        "n_multimorbidity": 15654,
+        "rate": 0.113605
+      },
+      {
+        "code": 6,
+        "label": "45-49",
+        "n": 136467,
+        "n_multimorbidity": 18743,
+        "rate": 0.137345
+      },
+      {
+        "code": 7,
+        "label": "50-54",
+        "n": 161866,
+        "n_multimorbidity": 26217,
+        "rate": 0.161967
+      },
+      {
+        "code": 8,
+        "label": "55-59",
+        "n": 184148,
+        "n_multimorbidity": 35705,
+        "rate": 0.193893
+      },
+      {
+        "code": 9,
+        "label": "60-64",
+        "n": 216355,
+        "n_multimorbidity": 47038,
+        "rate": 0.217411
+      },
+      {
+        "code": 10,
+        "label": "65-69",
+        "n": 225690,
+        "n_multimorbidity": 51436,
+        "rate": 0.227906
+      },
+      {
+        "code": 11,
+        "label": "70-74",
+        "n": 209395,
+        "n_multimorbidity": 53198,
+        "rate": 0.254056
+      },
+      {
+        "code": 12,
+        "label": "75-79",
+        "n": 153162,
+        "n_multimorbidity": 41636,
+        "rate": 0.271843
+      },
+      {
+        "code": 13,
+        "label": "80+",
+        "n": 176967,
+        "n_multimorbidity": 46364,
+        "rate": 0.261992
+      }
+    ],
+    "sex": [
+      {
+        "code": 1,
+        "label": "男",
+        "n": 990038,
+        "n_multimorbidity": 163668,
+        "rate": 0.165315
+      },
+      {
+        "code": 2,
+        "label": "女",
+        "n": 1146364,
+        "n_multimorbidity": 223092,
+        "rate": 0.194608
+      }
+    ],
+    "income_grp": [
+      {
+        "code": 1,
+        "label": "<1.5万",
+        "n": 121545,
+        "n_multimorbidity": 43743,
+        "rate": 0.359891
+      },
+      {
+        "code": 2,
+        "label": "1.5-2.5万",
+        "n": 203882,
+        "n_multimorbidity": 59950,
+        "rate": 0.294043
+      },
+      {
+        "code": 3,
+        "label": "2.5-3.5万",
+        "n": 190584,
+        "n_multimorbidity": 45089,
+        "rate": 0.236583
+      },
+      {
+        "code": 4,
+        "label": "3.5-5万",
+        "n": 233076,
+        "n_multimorbidity": 45599,
+        "rate": 0.19564
+      },
+      {
+        "code": 5,
+        "label": "≥5万",
+        "n": 951210,
+        "n_multimorbidity": 117207,
+        "rate": 0.123219
+      }
+    ],
+    "educa": [
+      {
+        "code": 1,
+        "label": "未上学",
+        "n": 3146,
+        "n_multimorbidity": 606,
+        "rate": 0.192626
+      },
+      {
+        "code": 2,
+        "label": "小学",
+        "n": 42984,
+        "n_multimorbidity": 10803,
+        "rate": 0.251326
+      },
+      {
+        "code": 3,
+        "label": "初中",
+        "n": 87340,
+        "n_multimorbidity": 25796,
+        "rate": 0.295351
+      },
+      {
+        "code": 4,
+        "label": "高中/GED",
+        "n": 546069,
+        "n_multimorbidity": 112360,
+        "rate": 0.205762
+      },
+      {
+        "code": 5,
+        "label": "大学1-3年",
+        "n": 582571,
+        "n_multimorbidity": 120158,
+        "rate": 0.206255
+      },
+      {
+        "code": 6,
+        "label": "大学4年+",
+        "n": 863829,
+        "n_multimorbidity": 115587,
+        "rate": 0.133808
+      }
+    ],
+    "state_fips": [
+      {
+        "code": 1,
+        "label": "AL",
+        "n": 25837,
+        "n_multimorbidity": 5977,
+        "rate": 0.231335
+      },
+      {
+        "code": 2,
+        "label": "AK",
+        "n": 23521,
+        "n_multimorbidity": 3635,
+        "rate": 0.154543
+      },
+      {
+        "code": 4,
+        "label": "AZ",
+        "n": 52086,
+        "n_multimorbidity": 9926,
+        "rate": 0.190569
+      },
+      {
+        "code": 5,
+        "label": "AR",
+        "n": 26613,
+        "n_multimorbidity": 6446,
+        "rate": 0.242212
+      },
+      {
+        "code": 6,
+        "label": "CA",
+        "n": 46041,
+        "n_multimorbidity": 6788,
+        "rate": 0.147434
+      },
+      {
+        "code": 8,
+        "label": "CO",
+        "n": 48111,
+        "n_multimorbidity": 6736,
+        "rate": 0.14001
+      },
+      {
+        "code": 9,
+        "label": "CT",
+        "n": 45737,
+        "n_multimorbidity": 7155,
+        "rate": 0.156438
+      },
+      {
+        "code": 10,
+        "label": "DE",
+        "n": 19828,
+        "n_multimorbidity": 3740,
+        "rate": 0.188622
+      },
+      {
+        "code": 11,
+        "label": "DC",
+        "n": 15680,
+        "n_multimorbidity": 2239,
+        "rate": 0.142793
+      },
+      {
+        "code": 12,
+        "label": "FL",
+        "n": 55386,
+        "n_multimorbidity": 11692,
+        "rate": 0.2111
+      },
+      {
+        "code": 13,
+        "label": "GA",
+        "n": 42072,
+        "n_multimorbidity": 8411,
+        "rate": 0.199919
+      },
+      {
+        "code": 15,
+        "label": "HI",
+        "n": 38802,
+        "n_multimorbidity": 5326,
+        "rate": 0.137261
+      },
+      {
+        "code": 16,
+        "label": "ID",
+        "n": 31407,
+        "n_multimorbidity": 5266,
+        "rate": 0.16767
+      },
+      {
+        "code": 17,
+        "label": "IL",
+        "n": 21737,
+        "n_multimorbidity": 3178,
+        "rate": 0.146202
+      },
+      {
+        "code": 18,
+        "label": "IN",
+        "n": 48727,
+        "n_multimorbidity": 10100,
+        "rate": 0.207277
+      },
+      {
+        "code": 19,
+        "label": "IA",
+        "n": 46905,
+        "n_multimorbidity": 7241,
+        "rate": 0.154376
+      },
+      {
+        "code": 20,
+        "label": "KS",
+        "n": 60573,
+        "n_multimorbidity": 10367,
+        "rate": 0.171149
+      },
+      {
+        "code": 21,
+        "label": "KY",
+        "n": 21350,
+        "n_multimorbidity": 5220,
+        "rate": 0.244496
+      },
+      {
+        "code": 22,
+        "label": "LA",
+        "n": 25575,
+        "n_multimorbidity": 5601,
+        "rate": 0.219003
+      },
+      {
+        "code": 23,
+        "label": "ME",
+        "n": 57058,
+        "n_multimorbidity": 12119,
+        "rate": 0.212398
+      },
+      {
+        "code": 24,
+        "label": "MD",
+        "n": 80954,
+        "n_multimorbidity": 13997,
+        "rate": 0.172901
+      },
+      {
+        "code": 25,
+        "label": "MA",
+        "n": 43113,
+        "n_multimorbidity": 6757,
+        "rate": 0.156728
+      },
+      {
+        "code": 26,
+        "label": "MI",
+        "n": 47231,
+        "n_multimorbidity": 9438,
+        "rate": 0.199826
+      },
+      {
+        "code": 27,
+        "label": "MN",
+        "n": 80304,
+        "n_multimorbidity": 12337,
+        "rate": 0.153629
+      },
+      {
+        "code": 28,
+        "label": "MS",
+        "n": 24324,
+        "n_multimorbidity": 5013,
+        "rate": 0.206093
+      },
+      {
+        "code": 29,
+        "label": "MO",
+        "n": 43415,
+        "n_multimorbidity": 8853,
+        "rate": 0.203916
+      },
+      {
+        "code": 30,
+        "label": "MT",
+        "n": 33237,
+        "n_multimorbidity": 5827,
+        "rate": 0.175317
+      },
+      {
+        "code": 31,
+        "label": "NE",
+        "n": 65936,
+        "n_multimorbidity": 9909,
+        "rate": 0.150282
+      },
+      {
+        "code": 32,
+        "label": "NV",
+        "n": 13830,
+        "n_multimorbidity": 2478,
+        "rate": 0.179176
+      },
+      {
+        "code": 33,
+        "label": "NH",
+        "n": 32532,
+        "n_multimorbidity": 5997,
+        "rate": 0.184342
+      },
+      {
+        "code": 34,
+        "label": "NJ",
+        "n": 36861,
+        "n_multimorbidity": 5049,
+        "rate": 0.136974
+      },
+      {
+        "code": 35,
+        "label": "NM",
+        "n": 27315,
+        "n_multimorbidity": 4864,
+        "rate": 0.178071
+      },
+      {
+        "code": 36,
+        "label": "NY",
+        "n": 103177,
+        "n_multimorbidity": 17300,
+        "rate": 0.167673
+      },
+      {
+        "code": 37,
+        "label": "NC",
+        "n": 23652,
+        "n_multimorbidity": 4232,
+        "rate": 0.178928
+      },
+      {
+        "code": 38,
+        "label": "ND",
+        "n": 25805,
+        "n_multimorbidity": 4160,
+        "rate": 0.161209
+      },
+      {
+        "code": 39,
+        "label": "OH",
+        "n": 72356,
+        "n_multimorbidity": 16031,
+        "rate": 0.221557
+      },
+      {
+        "code": 40,
+        "label": "OK",
+        "n": 29331,
+        "n_multimorbidity": 6532,
+        "rate": 0.2227
+      },
+      {
+        "code": 41,
+        "label": "OR",
+        "n": 28896,
+        "n_multimorbidity": 5226,
+        "rate": 0.180855
+      },
+      {
+        "code": 42,
+        "label": "PA",
+        "n": 23138,
+        "n_multimorbidity": 3983,
+        "rate": 0.172141
+      },
+      {
+        "code": 44,
+        "label": "RI",
+        "n": 28762,
+        "n_multimorbidity": 5293,
+        "rate": 0.184028
+      },
+      {
+        "code": 45,
+        "label": "SC",
+        "n": 41273,
+        "n_multimorbidity": 8165,
+        "rate": 0.197829
+      },
+      {
+        "code": 46,
+        "label": "SD",
+        "n": 34145,
+        "n_multimorbidity": 5653,
+        "rate": 0.165559
+      },
+      {
+        "code": 47,
+        "label": "TN",
+        "n": 26586,
+        "n_multimorbidity": 6338,
+        "rate": 0.238396
+      },
+      {
+        "code": 48,
+        "label": "TX",
+        "n": 58433,
+        "n_multimorbidity": 10866,
+        "rate": 0.185957
+      },
+      {
+        "code": 49,
+        "label": "UT",
+        "n": 54295,
+        "n_multimorbidity": 8614,
+        "rate": 0.158652
+      },
+      {
+        "code": 50,
+        "label": "VT",
+        "n": 36008,
+        "n_multimorbidity": 6100,
+        "rate": 0.169407
+      },
+      {
+        "code": 51,
+        "label": "VA",
+        "n": 46759,
+        "n_multimorbidity": 8871,
+        "rate": 0.189717
+      },
+      {
+        "code": 53,
+        "label": "WA",
+        "n": 91598,
+        "n_multimorbidity": 16469,
+        "rate": 0.179797
+      },
+      {
+        "code": 54,
+        "label": "WV",
+        "n": 27239,
+        "n_multimorbidity": 7648,
+        "rate": 0.280774
+      },
+      {
+        "code": 55,
+        "label": "WI",
+        "n": 40235,
+        "n_multimorbidity": 7259,
+        "rate": 0.180415
+      },
+      {
+        "code": 56,
+        "label": "WY",
+        "n": 22460,
+        "n_multimorbidity": 3789,
+        "rate": 0.1687
+      },
+      {
+        "code": 66,
+        "label": "GU",
+        "n": 10091,
+        "n_multimorbidity": 1427,
+        "rate": 0.141413
+      },
+      {
+        "code": 72,
+        "label": "PR",
+        "n": 25089,
+        "n_multimorbidity": 4609,
+        "rate": 0.183706
+      },
+      {
+        "code": 78,
+        "label": "VI",
+        "n": 4976,
+        "n_multimorbidity": 513,
+        "rate": 0.103095
+      }
+    ]
+  },
+  "risk_factor_exposure_by_year": {
+    "2019": {
+      "obese": {
+        "n_valid": 381853,
+        "n_positive": 123021,
+        "rate": 0.322168,
+        "mm_rate_exposed": 0.084292
+      },
+      "smoke_current": {
+        "n_valid": 399274,
+        "n_positive": 56418,
+        "rate": 0.141301,
+        "mm_rate_exposed": 0.039497
+      },
+      "phys_inactive": {
+        "n_valid": 396194,
+        "n_positive": 107730,
+        "rate": 0.271912,
+        "mm_rate_exposed": 0.074085
+      },
+      "cost_barrier": {
+        "n_valid": 416946,
+        "n_positive": 44367,
+        "rate": 0.106409,
+        "mm_rate_exposed": 0.029373
+      },
+      "no_doctor": {
+        "n_valid": 416244,
+        "n_positive": 70576,
+        "rate": 0.169554,
+        "mm_rate_exposed": 0.015633
+      },
+      "no_checkup_1y": {
+        "n_valid": 413346,
+        "n_positive": 79696,
+        "rate": 0.192807,
+        "mm_rate_exposed": 0.017951
+      },
+      "diffwalk": {
+        "n_valid": 402857,
+        "n_positive": 71546,
+        "rate": 0.177597,
+        "mm_rate_exposed": 0.081764
+      },
+      "heavy_drink": {
+        "n_valid": 0,
+        "n_positive": 0,
+        "rate": null,
+        "mm_rate_exposed": null
+      }
+    },
+    "2020": {
+      "obese": {
+        "n_valid": 360372,
+        "n_positive": 115358,
+        "rate": 0.320108,
+        "mm_rate_exposed": 0.079548
+      },
+      "smoke_current": {
+        "n_valid": 380744,
+        "n_positive": 52482,
+        "rate": 0.137841,
+        "mm_rate_exposed": 0.036673
+      },
+      "phys_inactive": {
+        "n_valid": 401108,
+        "n_positive": 95372,
+        "rate": 0.237771,
+        "mm_rate_exposed": 0.067595
+      },
+      "cost_barrier": {
+        "n_valid": 400654,
+        "n_positive": 34558,
+        "rate": 0.086254,
+        "mm_rate_exposed": 0.022838
+      },
+      "no_doctor": {
+        "n_valid": 399746,
+        "n_positive": 69966,
+        "rate": 0.175026,
+        "mm_rate_exposed": 0.015147
+      },
+      "no_checkup_1y": {
+        "n_valid": 396782,
+        "n_positive": 85752,
+        "rate": 0.216119,
+        "mm_rate_exposed": 0.019078
+      },
+      "diffwalk": {
+        "n_valid": 385075,
+        "n_positive": 57329,
+        "rate": 0.148877,
+        "mm_rate_exposed": 0.068662
+      },
+      "heavy_drink": {
+        "n_valid": 0,
+        "n_positive": 0,
+        "rate": null,
+        "mm_rate_exposed": null
+      }
+    },
+    "2021": {
+      "obese": {
+        "n_valid": 391559,
+        "n_positive": 131051,
+        "rate": 0.33469,
+        "mm_rate_exposed": 0.08375
+      },
+      "smoke_current": {
+        "n_valid": 413627,
+        "n_positive": 53826,
+        "rate": 0.130132,
+        "mm_rate_exposed": 0.036032
+      },
+      "phys_inactive": {
+        "n_valid": 437613,
+        "n_positive": 106996,
+        "rate": 0.244499,
+        "mm_rate_exposed": 0.069354
+      },
+      "cost_barrier": {
+        "n_valid": 437168,
+        "n_positive": 32582,
+        "rate": 0.07453,
+        "mm_rate_exposed": 0.020162
+      },
+      "no_doctor": {
+        "n_valid": 434841,
+        "n_positive": 52689,
+        "rate": 0.121168,
+        "mm_rate_exposed": 0.009753
+      },
+      "no_checkup_1y": {
+        "n_valid": 432659,
+        "n_positive": 95475,
+        "rate": 0.22067,
+        "mm_rate_exposed": 0.02125
+      },
+      "diffwalk": {
+        "n_valid": 418761,
+        "n_positive": 67545,
+        "rate": 0.161297,
+        "mm_rate_exposed": 0.072469
+      },
+      "heavy_drink": {
+        "n_valid": 0,
+        "n_positive": 0,
+        "rate": null,
+        "mm_rate_exposed": null
+      }
+    },
+    "2022": {
+      "obese": {
+        "n_valid": 396065,
+        "n_positive": 132350,
+        "rate": 0.334162,
+        "mm_rate_exposed": 0.089447
+      },
+      "smoke_current": {
+        "n_valid": 409606,
+        "n_positive": 49931,
+        "rate": 0.1219,
+        "mm_rate_exposed": 0.036088
+      },
+      "phys_inactive": {
+        "n_valid": 443913,
+        "n_positive": 106455,
+        "rate": 0.239811,
+        "mm_rate_exposed": 0.073195
+      },
+      "cost_barrier": {
+        "n_valid": 443395,
+        "n_positive": 37215,
+        "rate": 0.083932,
+        "mm_rate_exposed": 0.024037
+      },
+      "no_doctor": {
+        "n_valid": 440631,
+        "n_positive": 57087,
+        "rate": 0.129557,
+        "mm_rate_exposed": 0.012085
+      },
+      "no_checkup_1y": {
+        "n_valid": 439221,
+        "n_positive": 88374,
+        "rate": 0.201206,
+        "mm_rate_exposed": 0.020509
+      },
+      "diffwalk": {
+        "n_valid": 421042,
+        "n_positive": 68072,
+        "rate": 0.161675,
+        "mm_rate_exposed": 0.076106
+      },
+      "heavy_drink": {
+        "n_valid": 393977,
+        "n_positive": 56911,
+        "rate": 0.144453,
+        "mm_rate_exposed": 0.018392
+      }
+    },
+    "2023": {
+      "obese": {
+        "n_valid": 392505,
+        "n_positive": 129657,
+        "rate": 0.330332,
+        "mm_rate_exposed": 0.085492
+      },
+      "smoke_current": {
+        "n_valid": 410175,
+        "n_positive": 45138,
+        "rate": 0.110046,
+        "mm_rate_exposed": 0.031991
+      },
+      "phys_inactive": {
+        "n_valid": 431923,
+        "n_positive": 106814,
+        "rate": 0.247299,
+        "mm_rate_exposed": 0.073608
+      },
+      "cost_barrier": {
+        "n_valid": 431637,
+        "n_positive": 37181,
+        "rate": 0.08614,
+        "mm_rate_exposed": 0.022746
+      },
+      "no_doctor": {
+        "n_valid": 428948,
+        "n_positive": 52956,
+        "rate": 0.123456,
+        "mm_rate_exposed": 0.010328
+      },
+      "no_checkup_1y": {
+        "n_valid": 427412,
+        "n_positive": 79468,
+        "rate": 0.185928,
+        "mm_rate_exposed": 0.017868
+      },
+      "diffwalk": {
+        "n_valid": 415390,
+        "n_positive": 67012,
+        "rate": 0.161323,
+        "mm_rate_exposed": 0.074441
+      },
+      "heavy_drink": {
+        "n_valid": 399841,
+        "n_positive": 53073,
+        "rate": 0.132735,
+        "mm_rate_exposed": 0.016189
+      }
+    }
+  },
+  "association": {
+    "vars": [
+      "multimorbidity",
+      "obese",
+      "smoke_current",
+      "phys_inactive",
+      "cost_barrier",
+      "no_doctor",
+      "no_checkup_1y",
+      "diffwalk",
+      "poor_health",
+      "genhlth_poor",
+      "educa_low",
+      "income_low",
+      "age_65plus",
+      "sex_male",
+      "bmi"
+    ],
+    "labels_cn": [
+      "共病(慢病数≥2)",
+      "肥胖",
+      "现吸烟",
+      "无体力活动",
+      "费用障碍",
+      "无固定医生",
+      "超1年未体检",
+      "行走困难",
+      "自评健康差",
+      "自评健康差/一般",
+      "教育≤初中",
+      "收入<2.5万",
+      "年龄≥65",
+      "男性",
+      "BMI"
+    ],
+    "matrix": [
+      [
+        1.0,
+        0.1319,
+        0.0975,
+        0.1602,
+        0.0737,
+        0.0994,
+        0.113,
+        0.3172,
+        0.3361,
+        0.3361,
+        0.0655,
+        0.1702,
+        0.1356,
+        0.0379,
+        0.1518
+      ],
+      [
+        0.1319,
+        1.0,
+        0.0156,
+        0.1281,
+        0.033,
+        0.044,
+        0.0535,
+        0.1516,
+        0.128,
+        0.128,
+        0.0253,
+        0.0406,
+        0.0565,
+        0.0058,
+        0.7811
+      ],
+      [
+        0.0975,
+        0.0156,
+        1.0,
+        0.0991,
+        0.1109,
+        0.0859,
+        0.0777,
+        0.0849,
+        0.1171,
+        0.1171,
+        0.0971,
+        0.1545,
+        0.1041,
+        0.0273,
+        0.0284
+      ],
+      [
+        0.1602,
+        0.1281,
+        0.0991,
+        1.0,
+        0.0495,
+        0.0105,
+        0.0299,
+        0.2777,
+        0.246,
+        0.246,
+        0.1263,
+        0.1811,
+        0.0854,
+        0.0554,
+        0.1435
+      ],
+      [
+        0.0737,
+        0.033,
+        0.1109,
+        0.0495,
+        1.0,
+        0.154,
+        0.1412,
+        0.0744,
+        0.1375,
+        0.1375,
+        0.0879,
+        0.1449,
+        0.1447,
+        0.0216,
+        0.036
+      ],
+      [
+        0.0994,
+        0.044,
+        0.0859,
+        0.0105,
+        0.154,
+        1.0,
+        0.3992,
+        0.0881,
+        0.0343,
+        0.0343,
+        0.0929,
+        0.0679,
+        0.2009,
+        0.1177,
+        0.0526
+      ],
+      [
+        0.113,
+        0.0535,
+        0.0777,
+        0.0299,
+        0.1412,
+        0.3992,
+        1.0,
+        0.1071,
+        0.0662,
+        0.0662,
+        0.0289,
+        0.0007,
+        0.2085,
+        0.0943,
+        0.0623
+      ],
+      [
+        0.3172,
+        0.1516,
+        0.0849,
+        0.2777,
+        0.0744,
+        0.0881,
+        0.1071,
+        1.0,
+        0.4167,
+        0.4167,
+        0.1086,
+        0.2436,
+        0.1908,
+        0.0717,
+        0.1819
+      ],
+      [
+        0.3361,
+        0.128,
+        0.1171,
+        0.246,
+        0.1375,
+        0.0343,
+        0.0662,
+        0.4167,
+        1.0,
+        1.0,
+        0.1555,
+        0.2512,
+        0.0811,
+        0.0171,
+        0.1503
+      ],
+      [
+        0.3361,
+        0.128,
+        0.1171,
+        0.246,
+        0.1375,
+        0.0343,
+        0.0662,
+        0.4167,
+        1.0,
+        1.0,
+        0.1555,
+        0.2512,
+        0.0811,
+        0.0171,
+        0.1503
+      ],
+      [
+        0.0655,
+        0.0253,
+        0.0971,
+        0.1263,
+        0.0879,
+        0.0929,
+        0.0289,
+        0.1086,
+        0.1555,
+        0.1555,
+        1.0,
+        0.2385,
+        0.0066,
+        0.0138,
+        0.0278
+      ],
+      [
+        0.1702,
+        0.0406,
+        0.1545,
+        0.1811,
+        0.1449,
+        0.0679,
+        0.0007,
+        0.2436,
+        0.2512,
+        0.2512,
+        0.2385,
+        1.0,
+        0.0441,
+        0.0766,
+        0.0444
+      ],
+      [
+        0.1356,
+        0.0565,
+        0.1041,
+        0.0854,
+        0.1447,
+        0.2009,
+        0.2085,
+        0.1908,
+        0.0811,
+        0.0811,
+        0.0066,
+        0.0441,
+        1.0,
+        0.0509,
+        0.0678
+      ],
+      [
+        0.0379,
+        0.0058,
+        0.0273,
+        0.0554,
+        0.0216,
+        0.1177,
+        0.0943,
+        0.0717,
+        0.0171,
+        0.0171,
+        0.0138,
+        0.0766,
+        0.0509,
+        1.0,
+        0.0176
+      ],
+      [
+        0.1518,
+        0.7811,
+        0.0284,
+        0.1435,
+        0.036,
+        0.0526,
+        0.0623,
+        0.1819,
+        0.1503,
+        0.1503,
+        0.0278,
+        0.0444,
+        0.0678,
+        0.0176,
+        1.0
+      ]
+    ],
+    "detail_mm": {
+      "multimorbidity": {
+        "exposure": "multimorbidity",
+        "exposure_cn": "共病(慢病数≥2)",
+        "n": 2136402,
+        "n11": 386760,
+        "n10": 0,
+        "n01": 0,
+        "n00": 1749642,
+        "rate_exposed": 1.0,
+        "rate_unexposed": 0.0,
+        "rate_diff_pp": 100.0,
+        "chi2": 2136402.0,
+        "p_value": 0.0,
+        "cramers_v": 1.0,
+        "or_crude": null
+      },
+      "obese": {
+        "exposure": "obese",
+        "exposure_cn": "肥胖",
+        "n": 1922354,
+        "n11": 162630,
+        "n10": 191867,
+        "n01": 468807,
+        "n00": 1099050,
+        "rate_exposed": 0.458763,
+        "rate_unexposed": 0.299011,
+        "rate_diff_pp": 15.9751,
+        "chi2": 33451.317,
+        "p_value": 0.0,
+        "cramers_v": 0.131914,
+        "or_crude": 1.9871
+      },
+      "smoke_current": {
+        "exposure": "smoke_current",
+        "exposure_cn": "现吸烟",
+        "n": 2013426,
+        "n11": 72541,
+        "n10": 295982,
+        "n01": 185254,
+        "n00": 1459649,
+        "rate_exposed": 0.196843,
+        "rate_unexposed": 0.112623,
+        "rate_diff_pp": 8.4219,
+        "chi2": 19127.487,
+        "p_value": 0.0,
+        "cramers_v": 0.097468,
+        "or_crude": 1.9311
+      },
+      "phys_inactive": {
+        "exposure": "phys_inactive",
+        "exposure_cn": "无体力活动",
+        "n": 2110751,
+        "n11": 151100,
+        "n10": 231477,
+        "n01": 372267,
+        "n00": 1355907,
+        "rate_exposed": 0.394953,
+        "rate_unexposed": 0.215411,
+        "rate_diff_pp": 17.9543,
+        "chi2": 54148.93,
+        "p_value": 0.0,
+        "cramers_v": 0.160168,
+        "or_crude": 2.3776
+      },
+      "cost_barrier": {
+        "exposure": "cost_barrier",
+        "exposure_cn": "费用障碍",
+        "n": 2129800,
+        "n11": 50687,
+        "n10": 334590,
+        "n01": 135216,
+        "n00": 1609307,
+        "rate_exposed": 0.13156,
+        "rate_unexposed": 0.077509,
+        "rate_diff_pp": 5.4051,
+        "chi2": 11572.757,
+        "p_value": 0.0,
+        "cramers_v": 0.073714,
+        "or_crude": 1.803
+      },
+      "no_doctor": {
+        "exposure": "no_doctor",
+        "exposure_cn": "无固定医生",
+        "n": 2120410,
+        "n11": 26558,
+        "n10": 357934,
+        "n01": 276716,
+        "n00": 1459202,
+        "rate_exposed": 0.069073,
+        "rate_unexposed": 0.159406,
+        "rate_diff_pp": -9.0333,
+        "chi2": 20956.002,
+        "p_value": 0.0,
+        "cramers_v": 0.099413,
+        "or_crude": 0.3913
+      },
+      "no_checkup_1y": {
+        "exposure": "no_checkup_1y",
+        "exposure_cn": "超1年未体检",
+        "n": 2109420,
+        "n11": 40829,
+        "n10": 341870,
+        "n01": 387936,
+        "n00": 1338785,
+        "rate_exposed": 0.106687,
+        "rate_unexposed": 0.224666,
+        "rate_diff_pp": -11.7979,
+        "chi2": 26925.041,
+        "p_value": 0.0,
+        "cramers_v": 0.112979,
+        "or_crude": 0.4122
+      },
+      "diffwalk": {
+        "exposure": "diffwalk",
+        "exposure_cn": "行走困难",
+        "n": 2043125,
+        "n11": 152692,
+        "n10": 219789,
+        "n01": 178812,
+        "n00": 1491832,
+        "rate_exposed": 0.409932,
+        "rate_unexposed": 0.107032,
+        "rate_diff_pp": 30.2901,
+        "chi2": 205582.76,
+        "p_value": 0.0,
+        "cramers_v": 0.317209,
+        "or_crude": 5.7961
+      },
+      "poor_health": {
+        "exposure": "poor_health",
+        "exposure_cn": "自评健康差",
+        "n": 2130934,
+        "n11": 173778,
+        "n10": 211463,
+        "n01": 204698,
+        "n00": 1540995,
+        "rate_exposed": 0.451089,
+        "rate_unexposed": 0.117259,
+        "rate_diff_pp": 33.383,
+        "chi2": 240788.425,
+        "p_value": 0.0,
+        "cramers_v": 0.33615,
+        "or_crude": 6.1865
+      },
+      "genhlth_poor": {
+        "exposure": "genhlth_poor",
+        "exposure_cn": "自评健康差/一般",
+        "n": 2130934,
+        "n11": 173778,
+        "n10": 211463,
+        "n01": 204698,
+        "n00": 1540995,
+        "rate_exposed": 0.451089,
+        "rate_unexposed": 0.117259,
+        "rate_diff_pp": 33.383,
+        "chi2": 240788.425,
+        "p_value": 0.0,
+        "cramers_v": 0.33615,
+        "or_crude": 6.1865
+      },
+      "educa_low": {
+        "exposure": "educa_low",
+        "exposure_cn": "教育≤初中",
+        "n": 2125939,
+        "n11": 37205,
+        "n10": 348105,
+        "n01": 96265,
+        "n00": 1644364,
+        "rate_exposed": 0.096559,
+        "rate_unexposed": 0.055305,
+        "rate_diff_pp": 4.1254,
+        "chi2": 9124.771,
+        "p_value": 0.0,
+        "cramers_v": 0.065514,
+        "or_crude": 1.8257
+      },
+      "income_low": {
+        "exposure": "income_low",
+        "exposure_cn": "收入<2.5万",
+        "n": 1700297,
+        "n11": 103693,
+        "n10": 207895,
+        "n01": 221734,
+        "n00": 1166975,
+        "rate_exposed": 0.332789,
+        "rate_unexposed": 0.159669,
+        "rate_diff_pp": 17.312,
+        "chi2": 49282.676,
+        "p_value": 0.0,
+        "cramers_v": 0.170249,
+        "or_crude": 2.625
+      },
+      "age_65plus": {
+        "exposure": "age_65plus",
+        "exposure_cn": "年龄≥65",
+        "n": 2136402,
+        "n11": 194178,
+        "n10": 192582,
+        "n01": 582097,
+        "n00": 1167545,
+        "rate_exposed": 0.502063,
+        "rate_unexposed": 0.332695,
+        "rate_diff_pp": 16.9368,
+        "chi2": 39277.453,
+        "p_value": 0.0,
+        "cramers_v": 0.135591,
+        "or_crude": 2.0224
+      },
+      "sex_male": {
+        "exposure": "sex_male",
+        "exposure_cn": "男性",
+        "n": 2136402,
+        "n11": 163668,
+        "n10": 223092,
+        "n01": 826370,
+        "n00": 923272,
+        "rate_exposed": 0.423177,
+        "rate_unexposed": 0.472308,
+        "rate_diff_pp": -4.9131,
+        "chi2": 3074.741,
+        "p_value": 0.0,
+        "cramers_v": 0.037937,
+        "or_crude": 0.8197
+      }
+    }
+  },
+  "weighted_vs_unweighted": {
+    "by_year": {
+      "2019": {
+        "n": 418129,
+        "weight_sum": 252362358.05,
+        "mean_weight": 603.551,
+        "items": {
+          "has_diabetes": {
+            "weighted_rate": 0.11103,
+            "unweighted_rate": 0.137513
+          },
+          "has_mi": {
+            "weighted_rate": 0.042212,
+            "unweighted_rate": 0.058613
+          },
+          "has_chd": {
+            "weighted_rate": 0.039049,
+            "unweighted_rate": 0.056578
+          },
+          "has_stroke": {
+            "weighted_rate": 0.034051,
+            "unweighted_rate": 0.044957
+          },
+          "has_copd": {
+            "weighted_rate": 0.065844,
+            "unweighted_rate": 0.085163
+          },
+          "has_asthma": {
+            "weighted_rate": 0.145411,
+            "unweighted_rate": 0.141379
+          },
+          "has_kidney": {
+            "weighted_rate": 0.031472,
+            "unweighted_rate": 0.039063
+          },
+          "has_depression": {
+            "weighted_rate": 0.187865,
+            "unweighted_rate": 0.190346
+          },
+          "multimorbidity": {
+            "weighted_rate": 0.151428,
+            "unweighted_rate": 0.182274
+          }
+        }
+      },
+      "2020": {
+        "n": 401758,
+        "weight_sum": 260291358.8,
+        "mean_weight": 647.881,
+        "items": {
+          "has_diabetes": {
+            "weighted_rate": 0.111445,
+            "unweighted_rate": 0.129864
+          },
+          "has_mi": {
+            "weighted_rate": 0.042223,
+            "unweighted_rate": 0.05491
+          },
+          "has_chd": {
+            "weighted_rate": 0.041148,
+            "unweighted_rate": 0.056685
+          },
+          "has_stroke": {
+            "weighted_rate": 0.031461,
+            "unweighted_rate": 0.039117
+          },
+          "has_copd": {
+            "weighted_rate": 0.064281,
+            "unweighted_rate": 0.078607
+          },
+          "has_asthma": {
+            "weighted_rate": 0.138821,
+            "unweighted_rate": 0.135155
+          },
+          "has_kidney": {
+            "weighted_rate": 0.030329,
+            "unweighted_rate": 0.037496
+          },
+          "has_depression": {
+            "weighted_rate": 0.183241,
+            "unweighted_rate": 0.189619
+          },
+          "multimorbidity": {
+            "weighted_rate": 0.146966,
+            "unweighted_rate": 0.172121
+          }
+        }
+      },
+      "2021": {
+        "n": 438457,
+        "weight_sum": 245934832.5,
+        "mean_weight": 560.91,
+        "items": {
+          "has_diabetes": {
+            "weighted_rate": 0.113804,
+            "unweighted_rate": 0.131631
+          },
+          "has_mi": {
+            "weighted_rate": 0.040072,
+            "unweighted_rate": 0.05236
+          },
+          "has_chd": {
+            "weighted_rate": 0.038583,
+            "unweighted_rate": 0.052693
+          },
+          "has_stroke": {
+            "weighted_rate": 0.032559,
+            "unweighted_rate": 0.039365
+          },
+          "has_copd": {
+            "weighted_rate": 0.064212,
+            "unweighted_rate": 0.078264
+          },
+          "has_asthma": {
+            "weighted_rate": 0.14615,
+            "unweighted_rate": 0.140754
+          },
+          "has_kidney": {
+            "weighted_rate": 0.030843,
+            "unweighted_rate": 0.039143
+          },
+          "has_depression": {
+            "weighted_rate": 0.194876,
+            "unweighted_rate": 0.195788
+          },
+          "multimorbidity": {
+            "weighted_rate": 0.152291,
+            "unweighted_rate": 0.174758
+          }
+        }
+      },
+      "2022": {
+        "n": 444923,
+        "weight_sum": 264641350.56,
+        "mean_weight": 594.803,
+        "items": {
+          "has_diabetes": {
+            "weighted_rate": 0.12085,
+            "unweighted_rate": 0.137729
+          },
+          "has_mi": {
+            "weighted_rate": 0.044156,
+            "unweighted_rate": 0.056797
+          },
+          "has_chd": {
+            "weighted_rate": 0.044436,
+            "unweighted_rate": 0.060244
+          },
+          "has_stroke": {
+            "weighted_rate": 0.035735,
+            "unweighted_rate": 0.043373
+          },
+          "has_copd": {
+            "weighted_rate": 0.067638,
+            "unweighted_rate": 0.080503
+          },
+          "has_asthma": {
+            "weighted_rate": 0.152416,
+            "unweighted_rate": 0.150429
+          },
+          "has_kidney": {
+            "weighted_rate": 0.036999,
+            "unweighted_rate": 0.045836
+          },
+          "has_depression": {
+            "weighted_rate": 0.206357,
+            "unweighted_rate": 0.20666
+          },
+          "multimorbidity": {
+            "weighted_rate": 0.165551,
+            "unweighted_rate": 0.189786
+          }
+        }
+      },
+      "2023": {
+        "n": 433135,
+        "weight_sum": 254036881.84,
+        "mean_weight": 586.507,
+        "items": {
+          "has_diabetes": {
+            "weighted_rate": 0.120737,
+            "unweighted_rate": 0.138285
+          },
+          "has_mi": {
+            "weighted_rate": 0.041916,
+            "unweighted_rate": 0.054442
+          },
+          "has_chd": {
+            "weighted_rate": 0.040655,
+            "unweighted_rate": 0.05466
+          },
+          "has_stroke": {
+            "weighted_rate": 0.033857,
+            "unweighted_rate": 0.042492
+          },
+          "has_copd": {
+            "weighted_rate": 0.061877,
+            "unweighted_rate": 0.076745
+          },
+          "has_asthma": {
+            "weighted_rate": 0.151467,
+            "unweighted_rate": 0.149126
+          },
+          "has_kidney": {
+            "weighted_rate": 0.038294,
+            "unweighted_rate": 0.047644
+          },
+          "has_depression": {
+            "weighted_rate": 0.201715,
+            "unweighted_rate": 0.204647
+          },
+          "multimorbidity": {
+            "weighted_rate": 0.158976,
+            "unweighted_rate": 0.185464
+          }
+        }
+      }
+    },
+    "note": "加权使用 CDC 最终设计权重 _LLCPWT（原始 parquet），未加权为样本内比例；差异方向反映 BRFSS 抽样对高龄/低教育人群的低估程度。"
+  },
+  "notes": [
+    "患病率单位一律为 %，小数位 4 位；n 为该指标的有效分母。",
+    "慢性病标志位 1=有；7=不知道/9=拒答已在清洗阶段置 NULL。",
+    "共病 multimorbidity = chronic_count>=2。"
+  ]
+}

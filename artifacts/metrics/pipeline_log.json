@@ -1,0 +1,518 @@
+{
+  "steps": [
+    {
+      "step": "01_download",
+      "label": "原始数据下载与校验",
+      "started_at": "2026-10-19T17:52:11+08:00",
+      "finished_at": "2026-10-19T17:52:11+08:00",
+      "elapsed_sec": 0.3,
+      "rows_in": 2137374,
+      "rows_out": 2137374,
+      "rows_by_year": {
+        "2019": 418268,
+        "2020": 401958,
+        "2021": 438693,
+        "2022": 445132,
+        "2023": 433323
+      },
+      "files": [
+        {
+          "name": "LLCP2019.parquet",
+          "bytes": 35759023,
+          "sha256": "177ad40293871551f8ed8faaa5405c44a57773615115eea15b3efa56e8042487",
+          "rows": 418268
+        },
+        {
+          "name": "LLCP2020.parquet",
+          "bytes": 24611201,
+          "sha256": "62b4d8a6bbfbc14839a05ef85e02999a8d5d6ed92678421ec74b28246c744d5c",
+          "rows": 401958
+        },
+        {
+          "name": "LLCP2021.parquet",
+          "bytes": 29483979,
+          "sha256": "b2f49bb06940cfe37671be6f3a9dbedae41cdf3125a4e1dd110e465ae8bb13d0",
+          "rows": 438693
+        },
+        {
+          "name": "LLCP2022.parquet",
+          "bytes": 30036785,
+          "sha256": "0efca1aee7f89734c98f77bb159d467ce3f2c691515d638e0903cd075c30fe68",
+          "rows": 445132
+        },
+        {
+          "name": "LLCP2023.parquet",
+          "bytes": 32923768,
+          "sha256": "5b819b859d7dd6ac0d63930d5f18fda4bfc9efd8e9b576a5b7d1540ee30a53cb",
+          "rows": 433323
+        },
+        {
+          "name": "dictionary.csv",
+          "bytes": 2745228,
+          "sha256": "5b457ea033e419a6ba14586eb5d596518ce9cc2a4baab641f70fb6ddcc8b2c69",
+          "rows": null
+        },
+        {
+          "name": "variables.csv",
+          "bytes": 115867,
+          "sha256": "bc3c1e93d4b29c3bad86e82c4c37b76d3ce3fa6943f89f69275b0869358c6861",
+          "rows": null
+        }
+      ],
+      "total_bytes": 155675851,
+      "raw_dir": "D:\\期末作业\\慢性病患者健康风险预测与干预\\data\\raw"
+    },
+    {
+      "step": "06_build_db",
+      "label": "SQLite 建库与聚合",
+      "run_id": "9f70fd314d46",
+      "started_at": "2026-10-19T17:53:50+08:00",
+      "finished_at": "2026-10-19T17:55:25+08:00",
+      "elapsed_sec": 95.2,
+      "load_sec": 33.5,
+      "agg_sec": 46.5,
+      "batch_size": 50000,
+      "rows_in": 2136402,
+      "rows_out": 2136402,
+      "db_path": "db/chronic_risk.db",
+      "db_bytes": 386215936,
+      "schema_path": "db/schema.sql",
+      "verification": {
+        "n_fact": 2136402,
+        "n_parquet": 2136402,
+        "count_match": true,
+        "rows_by_year": {
+          "2019": 418129,
+          "2020": 401758,
+          "2021": 438457,
+          "2022": 444923,
+          "2023": 433135
+        },
+        "duplicate_seq_key": 0,
+        "null_pk_rows": 0,
+        "prevalence_2023": {
+          "has_asthma": {
+            "n_valid": 431622,
+            "n_positive": 64366,
+            "prevalence": 0.149126
+          },
+          "has_chd": {
+            "n_valid": 429092,
+            "n_positive": 23454,
+            "prevalence": 0.05466
+          },
+          "has_copd": {
+            "n_valid": 431257,
+            "n_positive": 33097,
+            "prevalence": 0.076745
+          },
+          "has_depression": {
+            "n_valid": 430736,
+            "n_positive": 88149,
+            "prevalence": 0.204647
+          },
+          "has_diabetes": {
+            "n_valid": 432339,
+            "n_positive": 59786,
+            "prevalence": 0.138285
+          },
+          "has_kidney": {
+            "n_valid": 431431,
+            "n_positive": 20555,
+            "prevalence": 0.047644
+          },
+          "has_mi": {
+            "n_valid": 430755,
+            "n_positive": 23451,
+            "prevalence": 0.054442
+          },
+          "has_stroke": {
+            "n_valid": 431849,
+            "n_positive": 18350,
+            "prevalence": 0.042492
+          },
+          "multimorbidity": {
+            "n_valid": 433135,
+            "n_positive": 80331,
+            "prevalence": 0.185464
+          }
+        },
+        "prevalence_avg_2019_2023": {
+          "has_asthma": 0.143369,
+          "has_chd": 0.056172,
+          "has_copd": 0.079856,
+          "has_depression": 0.197412,
+          "has_diabetes": 0.135004,
+          "has_kidney": 0.041836,
+          "has_mi": 0.055424,
+          "has_stroke": 0.041861,
+          "multimorbidity": 0.180881
+        },
+        "multimorbidity_by_year": {
+          "2019": 0.182274,
+          "2020": 0.172121,
+          "2021": 0.174758,
+          "2022": 0.189786,
+          "2023": 0.185464
+        },
+        "top5_state_multimorbidity": [
+          {
+            "state": "West Virginia",
+            "n": 27239,
+            "rate": 0.2808
+          },
+          {
+            "state": "Kentucky",
+            "n": 21350,
+            "rate": 0.2445
+          },
+          {
+            "state": "Arkansas",
+            "n": 26613,
+            "rate": 0.2422
+          },
+          {
+            "state": "Tennessee",
+            "n": 26586,
+            "rate": 0.2384
+          },
+          {
+            "state": "Alabama",
+            "n": 25837,
+            "rate": 0.2313
+          }
+        ],
+        "binary_dist": {
+          "phys_activity": {
+            "zero": 523367,
+            "one": 1587384,
+            "null": 25651
+          },
+          "heavy_drink": {
+            "zero": 683834,
+            "one": 109984,
+            "null": 1342584
+          },
+          "poor_health": {
+            "zero": 1752458,
+            "one": 378476,
+            "null": 5468
+          },
+          "obese": {
+            "zero": 1290917,
+            "one": 631437,
+            "null": 214048
+          },
+          "multimorbidity": {
+            "zero": 1749642,
+            "one": 386760,
+            "null": 0
+          },
+          "medcost": {
+            "zero": 0,
+            "one": 185903,
+            "null": 6602
+          },
+          "diffwalk": {
+            "zero": 0,
+            "one": 331504,
+            "null": 93277
+          },
+          "veteran": {
+            "zero": 0,
+            "one": 258098,
+            "null": 15937
+          },
+          "hispanic": {
+            "zero": 0,
+            "one": 198306,
+            "null": 26363
+          },
+          "has_diabetes": {
+            "zero": 1844604,
+            "one": 288055,
+            "null": 3743
+          },
+          "has_mi": {
+            "zero": 2006795,
+            "one": 117717,
+            "null": 11890
+          },
+          "has_chd": {
+            "zero": 1998219,
+            "one": 118932,
+            "null": 19251
+          },
+          "has_stroke": {
+            "zero": 2041194,
+            "one": 89224,
+            "null": 5984
+          },
+          "has_copd": {
+            "zero": 1956959,
+            "one": 169792,
+            "null": 9651
+          },
+          "has_asthma": {
+            "zero": 1823653,
+            "one": 305625,
+            "null": 7124
+          },
+          "has_kidney": {
+            "zero": 2039358,
+            "one": 89262,
+            "null": 7782
+          },
+          "has_depression": {
+            "zero": 1705114,
+            "one": 419958,
+            "null": 11330
+          }
+        },
+        "rates": {
+          "heavy_drink_rate": 0.138551,
+          "no_phys_activity_rate": 0.247953,
+          "poor_health_rate": 0.17761,
+          "obese_rate": 0.328471
+        },
+        "n_states": 54,
+        "n_agg_prevalence_year": 45,
+        "n_agg_prevalence_state": 2376,
+        "n_agg_risk_factor": 45,
+        "n_agg_risk_stratum": 32,
+        "tables": [
+          "agg_prevalence_state",
+          "agg_prevalence_year",
+          "agg_risk_factor",
+          "agg_risk_stratum",
+          "audit_pipeline",
+          "dim_age_group",
+          "dim_chronic",
+          "dim_education",
+          "dim_income_group",
+          "dim_state",
+          "dim_year",
+          "fact_brfss",
+          "model_metrics",
+          "sqlite_sequence",
+          "sqlite_stat1"
+        ],
+        "indexes": [
+          "idx_fact_age_grp",
+          "idx_fact_diabetes",
+          "idx_fact_multimorbidity",
+          "idx_fact_state",
+          "idx_fact_year"
+        ]
+      }
+    },
+    {
+      "step": "02_clean_spark",
+      "label": "PySpark 清洗与派生指标",
+      "started_at": "2026-10-19T17:56:06+08:00",
+      "finished_at": "2026-10-19T17:57:40+08:00",
+      "elapsed_sec": 93.4,
+      "engine": "pyspark 4.2.0 local[4] driver.memory=6g",
+      "rows_in": 2137374,
+      "rows_in_by_year": {
+        "2019": 418268,
+        "2020": 401958,
+        "2021": 438693,
+        "2022": 445132,
+        "2023": 433323
+      },
+      "rows_union": 2137374,
+      "rows_out": 2136402,
+      "rows_out_by_year": {
+        "2019": 418129,
+        "2020": 401758,
+        "2021": 438457,
+        "2022": 444923,
+        "2023": 433135
+      },
+      "seq_key_distinct": 2136402,
+      "drop_rules": [
+        {
+          "rule": "label_all_null",
+          "desc": "8 个慢病标志位全为 NULL（标签不可用）",
+          "rows": 972
+        }
+      ],
+      "value_rules": [
+        {
+          "rule": "bmi_out_of_range",
+          "desc": "BMI<10 或 >70 → 置 NULL（不丢行）",
+          "rows": 1053
+        },
+        {
+          "rule": "bmi_missing",
+          "desc": "_BMI5 原始缺失 → bmi 为 NULL（不丢行）",
+          "rows": 213753
+        }
+      ],
+      "rows_dropped_total": 972,
+      "output_file": "data/processed/brfss_clean.parquet",
+      "output_writer": "pyarrow streaming (winutils unavailable, Spark DataFrameWriter disabled)",
+      "output_bytes": 38268188,
+      "null_count_before": {
+        "bmi5": 213753,
+        "smoker3_raw": 0,
+        "totinda_raw": 0,
+        "rfbing_raw": 1258919,
+        "genhlth_raw": 45,
+        "rfhlth_raw": 0,
+        "menthlth_raw": 32,
+        "physhlth_raw": 48,
+        "checkup_raw": 22,
+        "medcost_raw": 21,
+        "persdoc_raw": 16,
+        "diffwalk_raw": 85352,
+        "race_raw": 445222,
+        "hispanic": 0,
+        "educa": 57,
+        "incomg_raw": 0,
+        "employ": 18536,
+        "marital": 81,
+        "veteran": 9709,
+        "age_grp": 0,
+        "diabete4": 26,
+        "cvdinfr4": 25,
+        "cvdchd4": 18,
+        "cvdstrk3": 22,
+        "copd_raw": 21,
+        "asthma3": 18,
+        "chckdny2": 25,
+        "addep3": 29
+      },
+      "null_count_after": {
+        "bmi": 214048,
+        "smoker3": 122976,
+        "phys_activity": 25651,
+        "heavy_drink": 1342584,
+        "genhlth": 5468,
+        "poor_health": 5468,
+        "menthlth": 41542,
+        "physhlth": 50074,
+        "checkup": 26982,
+        "medcost": 6602,
+        "persdoc": 15992,
+        "diffwalk": 93277,
+        "race": 49645,
+        "hispanic": 26363,
+        "educa": 10463,
+        "income_grp": 436105,
+        "employ": 40270,
+        "marital": 20835,
+        "veteran": 15937,
+        "age_grp": 40769,
+        "has_diabetes": 3743,
+        "has_mi": 11890,
+        "has_chd": 19251,
+        "has_stroke": 5984,
+        "has_copd": 9651,
+        "has_asthma": 7124,
+        "has_kidney": 7782,
+        "has_depression": 11330
+      },
+      "null_rate_after": {
+        "bmi": 0.100191,
+        "smoker3": 0.057562,
+        "phys_activity": 0.012007,
+        "heavy_drink": 0.628432,
+        "genhlth": 0.002559,
+        "poor_health": 0.002559,
+        "menthlth": 0.019445,
+        "physhlth": 0.023438,
+        "checkup": 0.01263,
+        "medcost": 0.00309,
+        "persdoc": 0.007485,
+        "diffwalk": 0.043661,
+        "race": 0.023238,
+        "hispanic": 0.01234,
+        "educa": 0.004897,
+        "income_grp": 0.204131,
+        "employ": 0.018849,
+        "marital": 0.009752,
+        "veteran": 0.00746,
+        "age_grp": 0.019083,
+        "has_diabetes": 0.001752,
+        "has_mi": 0.005565,
+        "has_chd": 0.009011,
+        "has_stroke": 0.002801,
+        "has_copd": 0.004517,
+        "has_asthma": 0.003335,
+        "has_kidney": 0.003643,
+        "has_depression": 0.005303
+      },
+      "chronic_prevalence": {
+        "has_diabetes": {
+          "name_cn": "糖尿病",
+          "n_positive": 288055,
+          "n_valid": 2132659,
+          "prevalence": 0.135068
+        },
+        "has_mi": {
+          "name_cn": "心肌梗死",
+          "n_positive": 117717,
+          "n_valid": 2124512,
+          "prevalence": 0.055409
+        },
+        "has_chd": {
+          "name_cn": "冠心病",
+          "n_positive": 118932,
+          "n_valid": 2117151,
+          "prevalence": 0.056175
+        },
+        "has_stroke": {
+          "name_cn": "卒中",
+          "n_positive": 89224,
+          "n_valid": 2130418,
+          "prevalence": 0.041881
+        },
+        "has_copd": {
+          "name_cn": "慢阻肺",
+          "n_positive": 169792,
+          "n_valid": 2126751,
+          "prevalence": 0.079836
+        },
+        "has_asthma": {
+          "name_cn": "哮喘",
+          "n_positive": 305625,
+          "n_valid": 2129278,
+          "prevalence": 0.143535
+        },
+        "has_kidney": {
+          "name_cn": "慢性肾病",
+          "n_positive": 89262,
+          "n_valid": 2128620,
+          "prevalence": 0.041934
+        },
+        "has_depression": {
+          "name_cn": "抑郁",
+          "n_positive": 419958,
+          "n_valid": 2125072,
+          "prevalence": 0.197621
+        },
+        "multimorbidity": {
+          "name_cn": "共病（慢病数≥2）",
+          "n_positive": 386760,
+          "n_valid": 2136402,
+          "prevalence": 0.181033
+        }
+      },
+      "columns": 37
+    },
+    {
+      "step": "03_eda_spark",
+      "label": "PySpark EDA + 假设验证",
+      "started_at": "2026-10-19T19:58:55+08:00",
+      "finished_at": "2026-10-19T20:02:08+08:00",
+      "elapsed_sec": 193.5,
+      "engine": "pyspark 4.2.0 local[8]",
+      "rows_in": 2136402,
+      "rows_out": 2136402,
+      "detail": "{\"figures\": 12, \"association_vars\": 15, \"logistic_n\": 2136402, \"logistic_r2\": 0.120062}"
+    }
+  ],
+  "generated_at": "2026-10-19T20:02:08+08:00"
+}

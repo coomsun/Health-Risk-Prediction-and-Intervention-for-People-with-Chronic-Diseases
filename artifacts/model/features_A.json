@@ -1,0 +1,25 @@
+{
+  "set": "A",
+  "label": "multimorbidity",
+  "features": [
+    "year",
+    "state_fips",
+    "sex",
+    "age",
+    "race",
+    "hispanic",
+    "educa",
+    "income_grp",
+    "employ",
+    "marital",
+    "veteran",
+    "bmi",
+    "obese",
+    "smoker3",
+    "phys_activity",
+    "heavy_drink",
+    "medcost",
+    "checkup",
+    "persdoc"
+  ]
+}
