@@ -48,5 +48,4 @@ artifacts/model/*.parquet
 .env
 
 # ===== 浏览器驱动二进制（体积大，按需下载）=====
-crawler/drivers/*.exe
-crawler/drivers/*.zip
+crawler/drivers/
