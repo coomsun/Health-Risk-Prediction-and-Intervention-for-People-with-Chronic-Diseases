@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>慢性病风险分析大屏 · Vue 组件化版</title>
+<style>
+  :root{--navy:#1F3B57;--accent:#2E6DA4;--grey:#556;--line:#e3e8ef}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f5f7fa;color:#223;font-family:"Microsoft YaHei","PingFang SC",sans-serif}
+  #app{padding:1.2rem 1.4rem 2rem;max-width:1680px;margin:0 auto}
+  h1{font-size:1.3rem;color:var(--navy);margin:.2rem 0 1.1rem;font-weight:700}
+  .vue-badge{display:inline-block;margin-left:.55rem;padding:.1rem .55rem;border-radius:999px;
+    background:var(--accent);color:#fff;font-size:.72rem;vertical-align:middle;font-weight:400}
+  .comp-card{background:#fff;border-radius:10px;padding:.9rem 1rem 1rem;
+    box-shadow:0 1px 3px rgba(20,40,70,.08);border:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:1rem;margin-top:1rem}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem}
+  .kpi-item{padding:.35rem .2rem}
+  .kpi-item .v{font-size:1.55rem;font-weight:700;color:var(--navy);line-height:1.2}
+  .kpi-item .l{font-size:.78rem;color:#7a8798;margin-top:.15rem}
+  .err{color:#c0392b;font-size:.85rem}
+  .loading{color:#8a94a6;font-size:.85rem}
+  .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:.55rem;align-items:end}
+  label{font-size:.75rem;color:#66788c;display:block;margin-bottom:.2rem}
+  input{padding:.42rem .5rem;border:1px solid #cfd8e3;border-radius:6px;font-size:.85rem;width:100%;background:#fff}
+  button{padding:.5rem .9rem;background:var(--accent);color:#fff;border:0;border-radius:6px;
+    cursor:pointer;font-size:.85rem;height:34px}
+  button:disabled{background:#a9c0d6;cursor:not-allowed}
+  h3{font-weight:600}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>慢性病患者健康风险分析
+    <span class="vue-badge">Vue 3 组件化</span>
+  </h1>
+
+  <p v-if="error" class="err">加载失败：{{ error }}
+    <button @click="loadAll">重试</button>
+  </p>
+
+  <kpi-cards :items="kpis"></kpi-cards>
+  <p v-if="loading" class="loading" style="margin-top:.8rem">数据加载中…</p>
+
+  <div class="row">
+    <chart-card title="各慢病患病率（2023）" :loading="loading" :error="error"
+                :option="prevalenceOption"></chart-card>
+    <chart-card title="共病率年度趋势（2019–2023）" :loading="loading" :error="error"
+                :option="trendOption"></chart-card>
+  </div>
+
+  <div class="row">
+    <chart-card title="危险因素暴露率（2023）" :loading="loading" :error="error"
+                :option="factorOption"></chart-card>
+    <chart-card title="慢性病数量分布" :loading="loading" :error="error"
+                :option="stratifyOption"></chart-card>
+  </div>
+
+  <div class="comp-card" style="margin-top:1rem">
+    <h3 style="margin:.1rem 0 .8rem;font-size:1rem;color:#1F3B57">在线个体风险预测（需 JWT 令牌）</h3>
+    <predict-form></predict-form>
+  </div>
+</div>
+
+<script src="../vendor/vue.global.prod.js"></script>
+<script src="../vendor/echarts.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/components.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

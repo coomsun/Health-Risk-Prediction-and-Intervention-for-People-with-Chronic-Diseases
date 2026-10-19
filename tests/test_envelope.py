@@ -37,7 +37,8 @@ def test_trace_id_is_echoed_when_client_provides_one(client, sample_db):
     assert response.headers["X-Trace-Id"] == "trace-from-client"
 
 
-def test_openapi_registers_nine_contract_paths(client):
+def test_openapi_registers_eleven_contract_paths(client):
+    """9 个业务接口 + 2 个鉴权接口（login / me）。"""
     spec = client.get("/openapi.json").json()
     paths = spec["paths"]
     expected = {
@@ -50,11 +51,13 @@ def test_openapi_registers_nine_contract_paths(client):
         "/api/v1/geo/states",
         "/api/v1/model/metrics",
         "/api/v1/predict",
+        "/api/v1/auth/login",
+        "/api/v1/auth/me",
     }
     assert expected <= set(paths)
     assert "get" in paths["/api/v1/health"]
     assert "post" in paths["/api/v1/predict"]
-    assert len([p for p in paths if p.startswith("/api/v1/")]) == 9
+    assert len([p for p in paths if p.startswith("/api/v1/")]) == 11  # 9 业务 + 2 鉴权
 
 
 def test_unknown_path_returns_envelope_404(client, sample_db):

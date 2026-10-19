@@ -1,0 +1,72 @@
+{
+  "engine": "lightgbm GridSearch + 3-Fold CV",
+  "grid": {
+    "num_leaves": [
+      31,
+      63
+    ],
+    "learning_rate": [
+      0.05,
+      0.1
+    ]
+  },
+  "n_combos": 4,
+  "baseline_cv": {
+    "auc": 0.77986,
+    "pr_auc": 0.45781
+  },
+  "search_results": [
+    {
+      "num_leaves": 31,
+      "learning_rate": 0.05,
+      "cv_auc": 0.77795,
+      "cv_pr_auc": 0.45419
+    },
+    {
+      "num_leaves": 31,
+      "learning_rate": 0.1,
+      "cv_auc": 0.77986,
+      "cv_pr_auc": 0.45781
+    },
+    {
+      "num_leaves": 63,
+      "learning_rate": 0.05,
+      "cv_auc": 0.77926,
+      "cv_pr_auc": 0.45616
+    },
+    {
+      "num_leaves": 63,
+      "learning_rate": 0.1,
+      "cv_auc": 0.7802,
+      "cv_pr_auc": 0.4584
+    }
+  ],
+  "best": {
+    "model": "LightGBM_SetA_tuned",
+    "feature_set": "SetA",
+    "auc_roc": 0.773263,
+    "auc_pr": 0.458969,
+    "f1": 0.461933,
+    "best_params": {
+      "num_leaves": 63,
+      "learning_rate": 0.1,
+      "cv_auc": 0.7802040810067157,
+      "cv_pr_auc": 0.45839725622555216
+    }
+  },
+  "baseline_test": {
+    "auc_roc": 0.7740033076708457,
+    "auc_pr": 0.4595219026712015,
+    "f1": 0.46186068139279535,
+    "accuracy": 0.6820413958696481,
+    "recall": 0.735693567862967,
+    "brier": 0.20194245718366666,
+    "positive_rate_pred": 0.40538400267814884,
+    "model": "LightGBM_SetA",
+    "feature_set": "SetA",
+    "n_features": 19,
+    "fit_seconds": 20.8
+  },
+  "auc_gain_on_test": -0.00074,
+  "elapsed_sec": 46.1
+}

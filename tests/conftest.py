@@ -69,3 +69,17 @@ def client():
 def rows() -> list[dict]:
     """样例数据原文，供测试现场统计期望值。"""
     return sample_rows()
+
+
+@pytest.fixture()
+def auth_headers(client):
+    """登录拿 JWT 令牌，供受保护接口（/predict）的用例复用。
+
+    演示账号由 api.auth 的默认值提供（demo/demo12345）。
+    若环境变量 AUTH_USERS 被改写，这里读的仍是模块默认值，
+    因此测试与生产配置解耦。
+    """
+    resp = client.post("/api/v1/auth/login", json={"username": "demo", "password": "demo12345"})
+    assert resp.status_code == 200, resp.text
+    token = resp.json()["data"]["accessToken"]
+    return {"Authorization": "Bearer " + token}

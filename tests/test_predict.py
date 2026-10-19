@@ -9,8 +9,8 @@ import pytest
 FEATURES = ["bmi", "smoker3", "age_grp"]
 
 
-def test_predict_without_model_returns_1001(client, sample_db):
-    response = client.post("/api/v1/predict", json={"bmi": 28.5})
+def test_predict_without_model_returns_1001(client, sample_db, auth_headers):
+    response = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 28.5})
     assert response.status_code == 503
     payload = response.json()
     assert payload["code"] == 1001
@@ -18,34 +18,35 @@ def test_predict_without_model_returns_1001(client, sample_db):
     assert payload["data"]["modelPath"]
 
 
-def test_predict_empty_body_returns_400(client, sample_db):
-    response = client.post("/api/v1/predict", json={})
+def test_predict_empty_body_returns_400(client, sample_db, auth_headers):
+    response = client.post("/api/v1/predict", headers=auth_headers, json={})
     assert response.status_code == 400
     payload = response.json()
     assert payload["code"] == 400
     assert "至少提供一项特征" in payload["message"]
 
 
-def test_predict_invalid_field_returns_400(client, sample_db):
-    response = client.post("/api/v1/predict", json={"bmi": 999})
+def test_predict_invalid_field_returns_400(client, sample_db, auth_headers):
+    response = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 999})
     assert response.status_code == 400
     payload = response.json()
     assert payload["code"] == 400
     assert "bmi" in payload["message"]
 
 
-def test_predict_accepts_zero_based_binary_fields(client, sample_db):
+def test_predict_accepts_zero_based_binary_fields(client, sample_db, auth_headers):
     """归一化后 phys_activity/heavy_drink/medcost/diffwalk 为 0/1，0 必须合法。"""
     response = client.post(
         "/api/v1/predict",
+        headers=auth_headers,
         json={"bmi": 27.0, "phys_activity": 0, "heavy_drink": 0, "medcost": 0, "diffwalk": 0},
     )
     assert response.status_code == 503  # 通过参数校验，止步于"模型未就绪"
     assert response.json()["code"] == 1001
 
 
-def test_predict_unknown_field_is_ignored(client, sample_db):
-    response = client.post("/api/v1/predict", json={"bmi": 26.0, "unknown_field": 1})
+def test_predict_unknown_field_is_ignored(client, sample_db, auth_headers):
+    response = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 26.0, "unknown_field": 1})
     # 未知字段被忽略，因此命中"模型未就绪"而不是参数错误
     assert response.json()["code"] == 1001
 
@@ -77,8 +78,8 @@ def trained_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return path
 
 
-def test_predict_with_real_model(client, trained_model):
-    response = client.post("/api/v1/predict", json={"bmi": 35.0, "smoker3": 1, "age_grp": 8})
+def test_predict_with_real_model(client, trained_model, auth_headers):
+    response = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 35.0, "smoker3": 1, "age_grp": 8})
     assert response.status_code == 200
     payload = response.json()
     assert payload["code"] == 0
@@ -98,17 +99,17 @@ def test_predict_with_real_model(client, trained_model):
     assert data["riskLevel"] == expected_level
 
 
-def test_predict_partial_features_are_reported(client, trained_model):
-    response = client.post("/api/v1/predict", json={"bmi": 24.0})
+def test_predict_partial_features_are_reported(client, trained_model, auth_headers):
+    response = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 24.0})
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["missingFeatures"] == ["smoker3", "age_grp"]
     assert 0.0 <= data["probability"] <= 1.0
 
 
-def test_predict_when_no_model_feature_provided(client, trained_model):
+def test_predict_when_no_model_feature_provided(client, trained_model, auth_headers):
     """只给了模型用不到的列时必须明确报错，不能拿全 NaN 硬算出一个假概率。"""
-    response = client.post("/api/v1/predict", json={"sex": 1, "state_fips": 6})
+    response = client.post("/api/v1/predict", headers=auth_headers, json={"sex": 1, "state_fips": 6})
     assert response.status_code == 400
     payload = response.json()
     assert payload["code"] == 1002
@@ -116,7 +117,7 @@ def test_predict_when_no_model_feature_provided(client, trained_model):
     assert "完全不匹配" in payload["message"]
 
 
-def test_predict_high_risk_has_higher_probability_than_low_risk(client, trained_model):
-    low = client.post("/api/v1/predict", json={"bmi": 20.0, "smoker3": 4, "age_grp": 2}).json()["data"]
-    high = client.post("/api/v1/predict", json={"bmi": 40.0, "smoker3": 1, "age_grp": 12}).json()["data"]
+def test_predict_high_risk_has_higher_probability_than_low_risk(client, trained_model, auth_headers):
+    low = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 20.0, "smoker3": 4, "age_grp": 2}).json()["data"]
+    high = client.post("/api/v1/predict", headers=auth_headers, json={"bmi": 40.0, "smoker3": 1, "age_grp": 12}).json()["data"]
     assert high["probability"] > low["probability"]

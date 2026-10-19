@@ -1,0 +1,18 @@
+# 构建上下文瘦身：排除数据、模型、缓存与开发期产物
+.git
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+data/
+artifacts/figures/
+artifacts/model/*.joblib
+artifacts/model/*.parquet
+db/*.db
+crawler/drivers/
+crawler/output/
+crawler/uci_spider/output/
+tests/
+pipeline/
+docs/
+.env

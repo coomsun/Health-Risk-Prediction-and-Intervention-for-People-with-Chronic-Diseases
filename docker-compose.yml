@@ -1,0 +1,38 @@
+# docker compose 一键起服务
+# 用法（先在宿主机复制 .env.example 为 .env 并改密钥）：
+#   docker compose up -d --build
+#   接口文档 http://127.0.0.1:8000/docs
+#   Vue 大屏 http://127.0.0.1:8080/vue/index.html
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chronic-risk-api:1.0
+    container_name: chronic-risk-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      TZ: "Asia/Shanghai"
+    volumes:
+      # 数据与模型以只读方式挂载，容器重建不丢数据
+      - ./db:/app/db:ro
+      - ./artifacts/model:/app/artifacts/model:ro
+      - ./artifacts/metrics:/app/artifacts/metrics:ro
+    restart: unless-stopped
+
+  # 静态前端（Vue 组件化版 + 原生版），无需 Node 构建
+  web:
+    image: python:3.12-slim
+    container_name: chronic-risk-web
+    working_dir: /srv
+    command: ["python", "-m", "http.server", "8080", "--bind", "0.0.0.0"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./web:/srv:ro
+    restart: unless-stopped
+    depends_on:
+      - api

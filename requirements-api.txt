@@ -1,0 +1,12 @@
+# 仅服务层运行时依赖（容器镜像用；训练依赖见 requirements.txt）
+fastapi==0.146.0
+uvicorn[standard]==0.54.0
+pydantic==2.12.5
+pandas==2.3.3
+numpy==2.5.4
+scikit-learn==1.9.1
+lightgbm==4.7.0
+joblib==1.6.0
+pyarrow==26.0.0
+PyJWT==2.15.1
+bcrypt==5.0.0

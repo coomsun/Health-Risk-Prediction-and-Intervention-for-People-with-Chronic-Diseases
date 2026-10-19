@@ -26,11 +26,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Query, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import __version__, contract, queries
+from . import __version__, auth, contract, queries
 from .contract import (
     CODE_INVALID_PARAM,
     CODE_MODEL_NOT_READY,
@@ -90,6 +90,14 @@ app.add_middleware(
 
 
 # ---------------------------------------------------------------- 入参模型
+class LoginRequest(BaseModel):
+    """登录入参。演示账号见部署文档（默认 demo/demo12345）。"""
+
+    username: str = Field(..., min_length=1, max_length=64, description="用户名")
+    password: str = Field(..., min_length=1, max_length=128, description="密码")
+    ttl: int | None = Field(None, ge=60, le=86400, description="令牌有效期（秒），默认 3600")
+
+
 class PredictRequest(BaseModel):
     """在线个体风险预测入参。
 
@@ -252,6 +260,24 @@ def index(request: Request) -> dict[str, Any]:
     )
 
 
+@app.post("/api/v1/auth/login", summary="登录并签发 JWT 令牌", tags=["鉴权"])
+def login(payload: LoginRequest, request: Request) -> dict[str, Any]:
+    """校验用户名密码，成功后返回 Bearer 令牌。
+
+    令牌用于调用受保护接口（如 POST /api/v1/predict）。
+    查询类接口默认公开，无需登录即可演示。
+    """
+    if not auth.authenticate(payload.username, payload.password):
+        raise ApiError(CODE_INVALID_PARAM, "用户名或密码错误", 401)
+    token = auth.issue_token(payload.username, payload.ttl)
+    return ok(request, {**token, "username": payload.username})
+
+
+@app.get("/api/v1/auth/me", summary="查询当前令牌身份", tags=["鉴权"])
+def whoami(request: Request, claims: dict[str, Any] = Depends(auth.require_token)) -> dict[str, Any]:
+    return ok(request, {"username": claims.get("sub"), "issuedAt": claims.get("iat"), "expiresAt": claims.get("exp")})
+
+
 @app.get("/api/v1/health", summary="健康检查（数据库连接与行数）")
 def health(request: Request) -> dict[str, Any]:
     data = queries.health()
@@ -308,8 +334,9 @@ def model_metrics(request: Request) -> dict[str, Any]:
     return ok(request, queries.model_metrics())
 
 
-@app.post("/api/v1/predict", summary="在线个体风险预测")
-def predict(payload: PredictRequest, request: Request) -> dict[str, Any]:
+@app.post("/api/v1/predict", summary="在线个体风险预测（需 JWT 令牌）", tags=["预测"])
+def predict(payload: PredictRequest, request: Request,
+            claims: dict[str, Any] = Depends(auth.require_token)) -> dict[str, Any]:
     started = time.perf_counter()
     provided = {key: value for key, value in payload.model_dump().items() if value is not None}
     if not provided:

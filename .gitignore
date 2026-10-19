@@ -43,3 +43,6 @@ Thumbs.db
 
 # 特征工程中间产物（19MB，可由 04_features.py 重建）
 artifacts/model/*.parquet
+
+# ===== 本地环境变量（含密钥，禁止入库）=====
+.env

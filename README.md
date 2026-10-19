@@ -228,3 +228,42 @@ D:\期末作业\.venv\Scripts\python.exe pipeline\01_download.py --verify
 2. **编码方向**：_RFBING6 是 1=否/2=是，_TOTINDA 是 1=有运动/2=无，与慢病标志位"1=是"相反。本项目统一归一化为 0/1 且 1=状态成立，否则酗酒率会从 13.27% 误报为 86.73%。
 3. **标签泄漏**：genhlth / menthlth / physhlth / diffwalk 是疾病后果，不可作为预测特征用于干预场景。
 
+
+
+---
+
+## 十一、加分项与近期增量（本次更新）
+
+《综合项目要求》中的加分项除「分布式数据库」外已全部实现（分布式库因本机不便部署，按要求排除）。
+
+### 新增文件
+
+| 路径 | 作用 |
+|---|---|
+| api/auth.py | JWT 鉴权：登录签发、Bearer 校验、bcrypt 密码哈希 |
+| pipeline/08_scheduled_ingest.py | 定时增量采集（HEAD 探活 + SHA256 判重 + 审计落库） |
+| pipeline/09_selenium_scrape.py | Selenium 无头 Edge 动态渲染抓取 |
+| pipeline/10_tuning.py | LightGBM 网格搜索与调优对比 |
+| pipeline/11_seaborn_figures.py | Seaborn 统计可视化（4 张图） |
+| crawler/ | Scrapy 工程（uci_spider）+ 本地 msedgedriver |
+| web/vue/ | Vue 3 组件化版本（4 图表组件 + 预测组件） |
+| tests/test_auth.py | 鉴权测试 10 项 |
+| Dockerfile / docker-compose.yml / .env.example | 容器化部署 |
+
+### 接口变化
+
+- 新增 POST /api/v1/auth/login（登录换令牌）
+- 新增 GET /api/v1/auth/me（查询当前令牌身份）
+- POST /api/v1/predict **改为需 Bearer 令牌**；其余查询接口保持公开
+
+演示账号：demo / demo12345（可用环境变量 AUTH_USERS 覆盖）
+
+### 测试
+
+    pytest -q        # 43 passed
+
+### 注意事项
+
+- scrapy 需在 crawler/ 目录下执行，或设置 SCRAPY_SETTINGS_MODULE
+- Selenium 依赖 crawler/drivers/msedgedriver.exe，Edge 大版本升级后需同步替换
+- 调优结果表明默认参数已接近该特征集上限（测试集 AUC 反而 -0.0007），已在报告中如实说明
