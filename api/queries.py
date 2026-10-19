@@ -314,7 +314,8 @@ TREND_METRICS: dict[str, MetricDef] = {
         "inactivity_rate",
         "缺乏运动率",
         "ratio",
-        "SUM(CASE WHEN phys_activity = 2 THEN 1 ELSE 0 END)",
+        # 统一 0/1 约定：phys_activity 1=有休闲运动、0=无；"缺乏运动"暴露取 0
+        "SUM(CASE WHEN phys_activity = 0 THEN 1 ELSE 0 END)",
         "COUNT(phys_activity)",
         ("phys_activity",),
     ),
@@ -322,8 +323,8 @@ TREND_METRICS: dict[str, MetricDef] = {
         "heavy_drink_rate",
         "重度饮酒率",
         "ratio",
-        # heavy_drink 取自 _RFBING6：1=否 / 2=是（与慢病标志位"1=是"相反），据库内实际编码取 2
-        "SUM(CASE WHEN heavy_drink = 2 THEN 1 ELSE 0 END)",
+        # 统一 0/1 约定：heavy_drink 1=酗酒（由 _RFBING6 的 2 归一化而来）
+        "SUM(CASE WHEN heavy_drink = 1 THEN 1 ELSE 0 END)",
         "COUNT(heavy_drink)",
         ("heavy_drink",),
     ),
@@ -345,15 +346,16 @@ RISK_FACTORS: tuple[tuple[str, str, str, str, str], ...] = (
     (
         "no_physical_activity",
         "过去30天无体育锻炼",
-        "SUM(CASE WHEN phys_activity = 2 THEN 1 ELSE 0 END)",
+        # 统一 0/1 约定：phys_activity 1=有运动、0=无，暴露取 0
+        "SUM(CASE WHEN phys_activity = 0 THEN 1 ELSE 0 END)",
         "COUNT(phys_activity)",
         "phys_activity",
     ),
     (
         "heavy_drink",
-        "重度饮酒（_RFBING6=2）",
-        # _RFBING6 原始编码 1=否 / 2=是，与慢病标志位相反，此处按库内实际编码判定暴露
-        "SUM(CASE WHEN heavy_drink = 2 THEN 1 ELSE 0 END)",
+        "重度饮酒",
+        # 统一 0/1 约定（1=状态成立）：heavy_drink 1 表示酗酒
+        "SUM(CASE WHEN heavy_drink = 1 THEN 1 ELSE 0 END)",
         "COUNT(heavy_drink)",
         "heavy_drink",
     ),

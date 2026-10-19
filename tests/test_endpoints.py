@@ -107,9 +107,11 @@ def test_risk_factors_exposure_rates(client, sample_db, rows):
     expected_obese = sum(1 for r in subset if r["bmi"] >= 30)
     assert by_key["obese"]["exposed"] == expected_obese
     assert by_key["obese"]["rate"] == round(expected_obese / len(subset), 6)
-    # heavy_drink 在库内是 _RFBING6 原码（1=否 / 2=是），暴露口径取 2
-    expected_drink = sum(1 for r in subset if r["heavy_drink"] == 2)
+    # 统一 0/1 约定：heavy_drink=1 为酗酒；phys_activity=0 为缺乏运动
+    expected_drink = sum(1 for r in subset if r["heavy_drink"] == 1)
     assert by_key["heavy_drink"]["exposed"] == expected_drink
+    expected_inactive = sum(1 for r in subset if r["phys_activity"] == 0)
+    assert by_key["no_physical_activity"]["exposed"] == expected_inactive
 
 
 def test_risk_stratify_distribution_consistent(client, sample_db, rows):

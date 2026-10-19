@@ -169,7 +169,8 @@ def sample_rows() -> list[dict[str, Any]]:
                         "veteran": 2,
                         "bmi": 22.0 + index * 3.0,
                         "smoker3": 1 + index % 4,
-                        "phys_activity": 1 if index % 2 == 0 else 2,
+                        # 统一 0/1 约定：phys_activity 1=有运动、0=无；heavy_drink 1=酗酒
+                        "phys_activity": 1 if index % 2 == 0 else 0,
                         "heavy_drink": 1 if index % 3 == 1 else 0,
                         "genhlth": 1 + index % 5,
                         "poor_health": 1 + index % 3,
