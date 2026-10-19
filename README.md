@@ -181,6 +181,7 @@ D:\期末作业\.venv\Scripts\python.exe pipeline\01_download.py --verify
 | chronic_count | 8 个标志位之和（NULL 记 0；8 项全 NULL 则该行标签不可用） |
 | 主标签 multimorbidity | chronic_count ≥ 2（共病） |
 | BMI | `_BMI5/100`，<10 或 >70 视为异常 → NULL |
+| 二值字段编码 | 统一 0/1 且 **1 = 状态成立**（`heavy_drink` 1=酗酒、`phys_activity` 1=有运动，故"无运动"暴露取 0）；有序分类（`smoker3` / `genhlth` / `checkup` / `persdoc`）保持原码，如 `checkup=8` 才是"从未体检" |
 | 主键 | `seq_key = f"{year}_{_STSTR}_{SEQNO}"`（**SEQNO 仅在层内唯一**：实测 2019 年 418,268 行只有 17,419 个不同 SEQNO，必须带 _STSTR 才唯一） |
 
 ## 七、已知限制
