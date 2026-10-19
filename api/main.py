@@ -159,8 +159,10 @@ def _load_model(path: Path) -> Any:
 
 def _feature_names(model: Any, model_dir: Path) -> list[str] | None:
     """推断模型入参列名：sidecar JSON > feature_names_in_ > LightGBM booster。"""
-    sidecar = model_dir / "feature_names.json"
-    if sidecar.exists():
+    for sidecar_name in ("feature_names.json", "model_meta.json", "metadata.json"):
+        sidecar = model_dir / sidecar_name
+        if not sidecar.exists():
+            continue
         try:
             content = json.loads(sidecar.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -335,11 +337,24 @@ def predict(payload: PredictRequest, request: Request) -> dict[str, Any]:
     try:
         if features:
             missing = [name for name in features if name not in provided]
+            if len(missing) == len(features):
+                raise ApiError(
+                    CODE_PREDICT_FAILED,
+                    "预测执行失败：入参与模型特征完全不匹配，未提供任何模型需要的列",
+                    400,
+                    data={
+                        "modelFeatures": features,
+                        "provided": sorted(provided),
+                        "hint": "请按 modelFeatures 中的字段名提交（见 docs/接口文档.md 3.9 节）",
+                    },
+                )
             row = {name: provided.get(name, float("nan")) for name in features}
             frame = pd.DataFrame([row], columns=features)
         else:
             frame = pd.DataFrame([provided])
         probability = _predict_probability(model, frame)
+    except ApiError:
+        raise  # 业务异常原样抛出，不要被下面的兜底包装覆盖状态码
     except Exception as exc:  # noqa: BLE001 - 模型与特征不匹配等一律转业务错误
         raise ApiError(
             CODE_PREDICT_FAILED,

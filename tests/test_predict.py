@@ -96,6 +96,16 @@ def test_predict_partial_features_are_reported(client, trained_model):
     assert 0.0 <= data["probability"] <= 1.0
 
 
+def test_predict_when_no_model_feature_provided(client, trained_model):
+    """只给了模型用不到的列时必须明确报错，不能拿全 NaN 硬算出一个假概率。"""
+    response = client.post("/api/v1/predict", json={"sex": 1, "state_fips": 6})
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["code"] == 1002
+    assert payload["data"]["modelFeatures"] == FEATURES
+    assert "完全不匹配" in payload["message"]
+
+
 def test_predict_high_risk_has_higher_probability_than_low_risk(client, trained_model):
     low = client.post("/api/v1/predict", json={"bmi": 20.0, "smoker3": 4, "age_grp": 2}).json()["data"]
     high = client.post("/api/v1/predict", json={"bmi": 40.0, "smoker3": 1, "age_grp": 12}).json()["data"]

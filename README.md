@@ -59,7 +59,7 @@ PySpark 负责 213 万行的清洗与探索性分析，scikit-learn/LightGBM 负
 │   ├── main.py               FastAPI 应用：9 个契约接口 + 在线预测
 │   ├── contract.py           统一响应信封、错误码、异常处理器、X-Response-Time
 │   └── queries.py            SQLite 只读聚合查询层（参数化、缺库降级）
-├── tests/                    pytest 后端用例（29 个，内存临时库，不碰交付库）
+├── tests/                    pytest 后端用例（30 个，内存临时库，不碰交付库）
 │   ├── conftest.py           夹具：样例库 / 空库 / 缺库 / TestClient
 │   ├── db_fixture.py         按规格第 4 节建表 + 确定性样例数据
 │   ├── test_envelope.py      信封结构、耗时头、404、openapi 路径注册
@@ -124,7 +124,7 @@ D:\期末作业\.venv\Scripts\python.exe -m uvicorn api.main:app --host 0.0.0.0 
 ### 7) 跑后端测试
 
 ```powershell
-D:\期末作业\.venv\Scripts\python.exe -m pytest tests -q     # 期望：29 passed
+D:\期末作业\.venv\Scripts\python.exe -m pytest tests -q     # 期望：30 passed
 ```
 
 ## 四、后端接口一览
