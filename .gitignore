@@ -22,11 +22,10 @@ db/*.db-wal
 db/*.db-shm
 
 # ===== 图表与模型二进制（由 pipeline 生成，体积大且可重建）=====
-artifacts/figures/*.png
-artifacts/figures/*.svg
-artifacts/model/*.joblib
-artifacts/model/*.pkl
-artifacts/model/*.txt
+# 图表与模型：体积可控（图约 3MB、模型 3MB），且是评阅理解结论的必需材料，
+# 故纳入版本库；仅排除超大的中间 parquet（见文件末尾）。
+!artifacts/figures/
+!artifacts/model/model.joblib
 
 # ===== 日志与临时文件 =====
 *.log
