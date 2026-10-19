@@ -412,49 +412,129 @@
   }
 
   /* ---------------------------------------------------- 7. 模型指标对比 */
+  /* 模型中文短名：x 轴空间有限，完整名放在 tooltip / 图例里 */
+  function shortModelName(name) {
+    var set = '';
+    if (/_SetA_tuned$/.test(name)) { set = 'A·调优'; name = name.replace(/_SetA_tuned$/, ''); }
+    else if (/_SetA$/.test(name)) { set = 'A'; name = name.replace(/_SetA$/, ''); }
+    else if (/_SetB$/.test(name)) { set = 'B'; name = name.replace(/_SetB$/, ''); }
+    var base = { LogisticRegression: 'LR', RandomForest: 'RF', LightGBM: 'LGBM' }[name] || name;
+    return set ? base + '-' + set : base;
+  }
+
+  /* 指标中文说明（tooltip 显示） */
+  var METRIC_CN = {
+    auc_roc: 'AUC-ROC', auc_pr: 'PR-AUC', f1: 'F1', accuracy: '准确率',
+    recall: '召回率', brier: 'Brier 分数', cv_auc_mean: '交叉验证 AUC 均值',
+    cv_auc_std: '交叉验证 AUC 标准差', auc_gain_after_tuning: '调优后 AUC 增量'
+  };
+
+  /* 默认只展开 2 个核心指标；其余通过图例点选，
+     避免 7 模型 × 9 指标 = 63 根柱挤在 300px 面板里导致标签互相覆盖。 */
+  var CORE_METRICS = ['auc_roc', 'auc_pr'];
+
   function modelMetricOption(payload) {
     var items = payload.items || [];
     var models = [];
-    var metrics = [];
+    var metricsAll = [];
     items.forEach(function (it) {
       if (models.indexOf(it.model_name) < 0) models.push(it.model_name);
-      if (metrics.indexOf(it.metric) < 0) metrics.push(it.metric);
+      if (metricsAll.indexOf(it.metric) < 0) metricsAll.push(it.metric);
     });
+    /* 核心指标排前面，保证颜色与图例顺序稳定 */
+    var metrics = CORE_METRICS.filter(function (m) { return metricsAll.indexOf(m) >= 0; })
+      .concat(metricsAll.filter(function (m) { return CORE_METRICS.indexOf(m) < 0; }));
+
     var colorList = [P.primary, P.teal, P.amber, P.violet, P.rose, P.cyan];
+    var nCore = CORE_METRICS.filter(function (m) { return metricsAll.indexOf(m) >= 0; }).length || 1;
+
+    /* 按当前可见柱数估算每根柱可用宽度，决定标签是否显示、字号多大。
+       面板宽约 470px，7 个模型分组。 */
+    var groupWidth = 470 / Math.max(models.length, 1);
+    var barWidth = groupWidth / Math.max(nCore, 1);
+    var labelFontSize = barWidth >= 34 ? 10 : (barWidth >= 26 ? 9 : 8);
+    var showLabel = barWidth >= 24;          // 太窄就不显示，交给 tooltip
+    var labelDigits = barWidth >= 40 ? 4 : (barWidth >= 30 ? 3 : 2);
+
+    var selected = {};
+    metrics.forEach(function (m) { selected[m.toUpperCase()] = CORE_METRICS.indexOf(m) >= 0; });
+
     var series = metrics.map(function (metric, mi) {
+      var isCore = CORE_METRICS.indexOf(metric) >= 0;
       return {
         name: metric.toUpperCase(),
         type: 'bar',
-        barMaxWidth: 26,
-        barGap: '20%',
-        itemStyle: { color: colorList[mi % colorList.length], borderRadius: [4, 4, 0, 0] },
-        label: { show: true, position: 'top', color: P.text, fontSize: 10, formatter: function (p) { return p.data == null ? '' : Number(p.data).toFixed(4); } },
+        barMaxWidth: 22,
+        barGap: '15%',
+        barCategoryGap: '38%',
+        itemStyle: { color: colorList[mi % colorList.length], borderRadius: [3, 3, 0, 0] },
+        label: {
+          show: showLabel && isCore,
+          position: 'top',
+          color: P.text,
+          fontSize: labelFontSize,
+          distance: 3,
+          formatter: function (pt) {
+            return pt.data == null ? '' : Number(pt.data).toFixed(labelDigits);
+          }
+        },
+        emphasis: { focus: 'series' },
+        /* 兜底：用户在图例里展开更多指标后柱会变窄，
+           ECharts 会自动隐藏互相重叠的标签，避免再次糊在一起 */
+        labelLayout: { hideOverlap: true },
         data: models.map(function (m) {
           var hit = items.filter(function (it) { return it.model_name === m && it.metric === metric; })[0];
           return hit ? Number(hit.value) : null;
         })
       };
     });
+
     return {
       animationDuration: 420,
-      grid: { left: 8, right: 12, top: 34, bottom: 6, containLabel: true },
-      legend: { top: 0, textStyle: { color: P.text2, fontSize: 11 }, itemWidth: 10, itemHeight: 8 },
+      /* top 由 34 → 46：图例固定单行（scroll），并给 y 轴名称留出空隙 */
+      grid: { left: 10, right: 14, top: 46, bottom: 8, containLabel: true },
+      legend: {
+        top: 2,
+        type: 'scroll',                 // 单行横向滚动，避免换行后压住绘图区
+        pageIconSize: 8,
+        pageTextStyle: { color: P.text2, fontSize: 10 },
+        itemWidth: 9,
+        itemHeight: 8,
+        itemGap: 12,
+        textStyle: { color: P.text2, fontSize: 10 },
+        selected: selected
+      },
       tooltip: Object.assign({
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
         formatter: function (ps) {
-          var head = '<b>' + ps[0].axisValue + '</b>';
-          var body = ps.map(function (p) {
-            return p.marker + ' ' + p.seriesName + '：' + (p.data == null ? '—' : Number(p.data).toFixed(4));
+          var full = ps[0].axisValue;
+          var head = '<b>' + full + '</b>';
+          var body = ps.map(function (pt) {
+            var name = METRIC_CN[pt.seriesName.toLowerCase()] || pt.seriesName;
+            return pt.marker + ' ' + name + '：' + (pt.data == null ? '—' : Number(pt.data).toFixed(4));
           }).join('<br/>');
           return head + '<br/>' + body;
         }
       }, TOOLTIP),
-      xAxis: { type: 'category', data: models, axisLabel: AXIS_LABEL, axisLine: AXIS_LINE, axisTick: { show: false } },
+      xAxis: {
+        type: 'category',
+        data: models,
+        axisLabel: Object.assign({}, AXIS_LABEL, {
+          interval: 0,
+          fontSize: 10,
+          rotate: 0,
+          formatter: shortModelName
+        }),
+        axisLine: AXIS_LINE,
+        axisTick: { show: false }
+      },
       yAxis: {
         type: 'value',
-        name: '指标值（0–1）',
-        nameTextStyle: { color: P.dim, fontSize: 11 },
+        name: '值(0–1)',
+        nameLocation: 'end',
+        nameGap: 8,
+        nameTextStyle: { color: P.dim, fontSize: 10, align: 'left', padding: [0, 0, 0, -26] },
         min: 0,
         max: 1,
         axisLabel: AXIS_LABEL,

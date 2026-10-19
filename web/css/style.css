@@ -190,7 +190,8 @@ select option { background: #0d1728; color: var(--c-text); }
 #panel-trend .panel-body { height: 380px; }
 #panel-geo .panel-body { height: 430px; }
 #panel-stratify .panel-body { height: 300px; }
-#panel-metrics .panel-body { height: 300px; }
+/* 9 个指标 × 7 个模型，需要比其它面板更高的容器，否则柱顶标签会互相覆盖 */
+#panel-metrics .panel-body { height: 340px; }
 #panel-age .panel-body { height: 300px; }
 #panel-drill .panel-body { height: 300px; }
 #panel-predict .panel-body { min-height: 260px; }
