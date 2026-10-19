@@ -157,7 +157,7 @@ text(s, Cm(1.5), Cm(13.4), Cm(13), Cm(3.4),
 
 # ---- 3 数据来源与规模 ----
 s = newslide(); header(s, "② 数据来源与规模", "“海量”体现在哪里")
-pic(s, os.path.join(FIG, "disease_prevalence.png"), Cm(20.5), Cm(4.0), h=Cm(9.4))
+pic(s, os.path.join(FIG, "disease_prevalence.png"), Cm(19.6), Cm(4.2), h=Cm(7.6))
 bullets(s, Cm(1.5), Cm(3.9), Cm(18.0), [
     "来源：CDC BRFSS 年度微观数据 LLCP，2019—2023 五个年度",
     "原始 %s 条 → 清洗后入库 %s 条（单表 fact_brfss）" % ("{:,}".format(2137374), "{:,}".format(N)),
@@ -260,13 +260,17 @@ text(s, Cm(1.5), Cm(12.9), Cm(17.5), Cm(1.2), "ROC 曲线（测试集 2023）", 
 
 # ---- 10 系统演示 ----
 s = newslide(); header(s, "⑨ 核心功能演示", "现场可跑：uvicorn 起服务 → 浏览器打开大屏 → 提交预测")
-pic(s, os.path.join(SHOT, "01-dashboard-full.png"), Cm(1.5), Cm(3.7), w=Cm(20.0))
-pic(s, os.path.join(SHOT, "04-predict-result.png"), Cm(22.2), Cm(3.7), w=Cm(11.5))
-text(s, Cm(1.5), Cm(12.4), Cm(20), Cm(1.0), "可视化大屏（数据全部来自实时 API）", size=11.5, bold=True, color=NAVY, align=PP_ALIGN.CENTER)
-text(s, Cm(22.2), Cm(12.4), Cm(11.5), Cm(1.0), "在线个体风险预测（真模型）", size=11.5, bold=True, color=NAVY, align=PP_ALIGN.CENTER)
-text(s, Cm(1.5), Cm(13.4), Cm(30), Cm(1.2),
-     "实测：9/9 接口 code=0；/predict 输入 68 岁肥胖吸烟者+费用障碍 → 概率 0.6813、高风险；"
-     "ECharts 与地图均为本地内置，断网可演示", size=12, color=ACCENT)
+# 大屏截图用横向版本（1600x1000）；整页长图 1600x2637 按宽度放会超出页高
+pic(s, os.path.join(SHOT, "02-dashboard-top.png"), Cm(1.5), Cm(4.0), w=Cm(16.6))
+pic(s, os.path.join(SHOT, "04-predict-result.png"), Cm(19.2), Cm(4.0), w=Cm(13.2))
+text(s, Cm(1.5), Cm(14.8), Cm(16.6), Cm(1.0), "可视化大屏（数据全部来自实时 API）",
+     size=11.5, bold=True, color=NAVY, align=PP_ALIGN.CENTER)
+text(s, Cm(19.2), Cm(9.0), Cm(13.2), Cm(1.0), "在线个体风险预测（真模型）",
+     size=11.5, bold=True, color=NAVY, align=PP_ALIGN.CENTER)
+text(s, Cm(19.2), Cm(10.4), Cm(13.2), Cm(6.4),
+     "实测 9/9 接口 code=0\n/risk/factors 17ms\n/risk/stratify 37ms\n\n"
+     "输入 68 岁肥胖吸烟者\n+费用障碍 → 概率 0.6813\n判定为“高风险”\n\n"
+     "ECharts 与地图本地内置\n断网亦可演示", size=11, color=GREY, spacing=1.35)
 
 # ---- 11 业务洞察 ----
 s = newslide(); header(s, "⑩ 业务洞察与干预建议", "从模型结论到可执行动作")
