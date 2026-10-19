@@ -631,7 +631,8 @@
     submit.disabled = true;
     msg.className = 'form-msg';
     msg.textContent = '正在请求 /api/v1/predict …';
-    API.post('/api/v1/predict', payload, { label: '在线预测' }).then(function (data) {
+    /* /predict 受 JWT 保护：postAuth 会先自动登录拿令牌，再带 Bearer 发起请求 */
+    API.postAuth('/api/v1/predict', payload, { label: '在线预测' }).then(function (data) {
       state.cache.predict = data;
       renderPredictResult(data);
       msg.className = 'form-msg is-ok';
@@ -642,8 +643,12 @@
       var hint = '';
       if (err && err.code === 1001) {
         hint = '（模型文件未生成，请先运行 pipeline/05_train.py 产出 artifacts/model/model.joblib）';
+      } else if (err && err.code === 401) {
+        hint = '（需要登录：演示账号为 demo / demo12345）';
       } else if (err && err.code === 400) {
         hint = '（特征取值超出契约允许范围）';
+      } else if (err && err.name === 'AuthError') {
+        hint = '（自动登录失败，请检查后端 AUTH_USERS 配置或令牌服务是否可用）';
       }
       msg.textContent = '预测失败：' + (err && err.message || '未知错误') + ' code=' + (err && err.code) + hint;
       renderPredictError(err);

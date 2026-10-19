@@ -24,7 +24,7 @@ import jwt
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from .contract import CODE_INVALID_PARAM, ApiError
+from .contract import CODE_UNAUTHORIZED, ApiError
 
 _ALGO = "HS256"
 _TTL = int(os.environ.get("AUTH_TOKEN_TTL", "3600"))
@@ -85,9 +85,9 @@ def decode_token(token: str) -> dict[str, Any]:
     try:
         return jwt.decode(token, _SECRET, algorithms=[_ALGO], issuer="brfss-api")
     except jwt.ExpiredSignatureError:
-        raise ApiError(CODE_INVALID_PARAM, "令牌已过期，请重新登录", 401)
+        raise ApiError(CODE_UNAUTHORIZED, "令牌已过期，请重新登录", 401)
     except jwt.InvalidTokenError as exc:
-        raise ApiError(CODE_INVALID_PARAM, f"令牌无效：{exc}", 401)
+        raise ApiError(CODE_UNAUTHORIZED, f"令牌无效：{exc}", 401)
 
 
 async def require_token(
@@ -96,7 +96,7 @@ async def require_token(
 ) -> dict[str, Any]:
     """受保护接口的依赖：校验 Bearer 令牌。"""
     if cred is None or not cred.credentials:
-        raise ApiError(CODE_INVALID_PARAM, "缺少访问令牌：请在 Authorization 头中提供 Bearer <token>", 401)
+        raise ApiError(CODE_UNAUTHORIZED, "缺少访问令牌：请在 Authorization 头中提供 Bearer <token>", 401)
     claims = decode_token(cred.credentials)
     request.state.user = claims.get("sub")
     return claims

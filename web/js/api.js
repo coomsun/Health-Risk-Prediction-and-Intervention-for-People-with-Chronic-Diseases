@@ -58,13 +58,13 @@
     return new Promise(function (resolve) { window.setTimeout(resolve, ms); });
   }
 
-  function fetchOnce(url, method, body, timeoutMs) {
+  function fetchOnce(url, method, body, timeoutMs, extraHeaders) {
     var controller = new AbortController();
     var timer = window.setTimeout(function () { controller.abort(); }, timeoutMs);
     var init = {
       method: method,
       signal: controller.signal,
-      headers: { 'Accept': 'application/json' },
+      headers: Object.assign({ 'Accept': 'application/json' }, extraHeaders || {}),
       cache: 'no-store'
     };
     if (body !== undefined) {
@@ -103,7 +103,7 @@
     state.lastPath = path;
 
     function attempt(round) {
-      return fetchOnce(url, method, options.body, timeoutMs).then(function (r) {
+      return fetchOnce(url, method, options.body, timeoutMs, options.headers).then(function (r) {
         var json = r.json;
         if (!json || typeof json.code === 'undefined') {
           /* 非信封响应：多半是 404 静态页或代理错误 */
@@ -154,8 +154,51 @@
     });
   }
 
+  /* ---------------------------------------------------- 鉴权（JWT）
+   * /api/v1/predict 是受保护接口，必须带 Bearer 令牌。
+   * 页面首次调用时自动用演示账号登录并缓存令牌，过期前 60s 自动续期。
+   * 演示账号可用 window.BRFSS_DEMO_USER = {username, password} 覆盖。
+   */
+  var auth = { token: null, expiresAt: 0, username: null };
+  var DEMO_USER = { username: 'demo', password: 'demo12345' };
+
+  function login(cred) {
+    var c = cred || window.BRFSS_DEMO_USER || DEMO_USER;
+    return request('/api/v1/auth/login', { method: 'POST', body: c, retries: 0 })
+      .then(function (d) {
+        auth.token = d.accessToken;
+        auth.username = d.username || c.username;
+        auth.expiresAt = Date.now() + (d.expiresIn || 3600) * 1000;
+        return auth.token;
+      })
+      .catch(function (err) {
+        var e = new Error('登录失败（' + c.username + '）：' + (err && err.message ? err.message : '未知错误'));
+        e.name = 'AuthError';
+        e.cause = err;
+        throw e;
+      });
+  }
+
+  function ensureToken() {
+    if (auth.token && Date.now() < auth.expiresAt - 60000) return Promise.resolve(auth.token);
+    return login();
+  }
+
+  function postAuth(path, body, options) {
+    return ensureToken().then(function (tk) {
+      return request(path, Object.assign(
+        { method: 'POST', body: body, headers: { Authorization: 'Bearer ' + tk } },
+        options || {}
+      ));
+    });
+  }
+
   NS.api = {
     state: state,
+    auth: auth,
+    login: login,
+    ensureToken: ensureToken,
+    postAuth: postAuth,
     request: request,
     get: function (path, params, options) {
       return request(path, Object.assign({ params: params }, options || {}));

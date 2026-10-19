@@ -23,6 +23,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 # 与 docs/接口文档.md「错误码表」一节严格一致。
 CODE_OK = 0
 CODE_INVALID_PARAM = 400
+#: 鉴权失败（未带令牌 / 令牌无效 / 令牌过期）。
+#: 不能复用 CODE_INVALID_PARAM，否则前端会把"缺少令牌"误解成"参数取值越界"。
+CODE_UNAUTHORIZED = 401
 CODE_NOT_FOUND = 404
 CODE_METHOD_NOT_ALLOWED = 405
 CODE_INTERNAL_ERROR = 500
@@ -33,6 +36,7 @@ CODE_DB_UNAVAILABLE = 1003
 ERROR_MESSAGES = {
     CODE_OK: "ok",
     CODE_INVALID_PARAM: "参数校验失败",
+    CODE_UNAUTHORIZED: "鉴权失败",
     CODE_NOT_FOUND: "接口或资源不存在",
     CODE_METHOD_NOT_ALLOWED: "请求方法不被支持",
     CODE_INTERNAL_ERROR: "服务器内部错误",
