@@ -161,7 +161,7 @@
     var unitText = isRatio ? '率(%)' : (payload.metric === 'chronic_avg' ? '种/人' : '样本量(人)');
     return {
       animationDuration: 420,
-      grid: { left: 10, right: 18, top: 30, bottom: 6, containLabel: true },
+      grid: { left: 10, right: 18, top: 42, bottom: 6, containLabel: true },
       tooltip: Object.assign({
         trigger: 'axis',
         formatter: function (ps) {
@@ -188,6 +188,7 @@
       yAxis: {
         type: 'value',
         name: unitText,
+        nameGap: 16,
         nameTextStyle: { color: P.dim, fontSize: 11, align: 'left' },
         scale: true,
         axisLabel: Object.assign({ formatter: isRatio ? '{value}%' : '{value}' }, AXIS_LABEL),

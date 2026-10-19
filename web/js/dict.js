@@ -76,12 +76,23 @@
     copd: 'copd_rate', asthma: 'asthma_rate', kidney: 'kidney_rate', depression: 'depression_rate'
   };
 
-  /* 危险因素 key（/risk/factors 的 items[].key）→ 趋势指标；无对应者不在表中 */
+  /* 危险因素 key（/risk/factors 的 items[].key）→ 趋势指标；无对应者不在表中。
+     后端在不同阶段的 key 命名有别名（如 no_physical_activity / no_phys_activity），
+     这里同时登记，避免契约微调导致联动静默失效。 */
   var FACTOR_TO_METRIC = {
     obese: 'obese_rate',
     current_smoker: 'smoker_rate',
     no_physical_activity: 'inactivity_rate',
+    no_phys_activity: 'inactivity_rate',
     heavy_drink: 'heavy_drink_rate'
+  };
+
+  /* 危险因素 key 别名（历史命名 → 当前契约命名），仅用于把接口返回的 key 归一到规则里用的名字 */
+  var FACTOR_ALIAS = {
+    no_phys_activity: 'no_physical_activity',
+    diff_walk: 'walking_difficulty',
+    fair_poor_health: 'fair_or_poor_health',
+    checkup_over_1y: 'never_checkup'
   };
 
   /* ---------- 图表色板（与 CSS 变量同源，供 ECharts 使用） ---------- */
@@ -155,10 +166,10 @@
     { name: 'sex', label: '性别（_SEX）', type: 'select', options: [[1, '男'], [2, '女']], default: 1 },
     { name: 'bmi', label: 'BMI（bmi）', type: 'number', min: 10, max: 70, step: 0.1, default: 26.5 },
     { name: 'smoker3', label: '吸烟状态（_SMOKER3）', type: 'select', options: [[1, '每日吸'], [2, '部分日吸'], [3, '曾经吸'], [4, '从不吸']], default: 4 },
-    { name: 'phys_activity', label: '体育锻炼（_TOTINDA）', type: 'select', options: [[1, '有'], [2, '无']], default: 1 },
+    { name: 'phys_activity', label: '体育锻炼（_TOTINDA）', type: 'select', options: [[1, '有锻炼'], [0, '无锻炼']], default: 1 },
     { name: 'genhlth', label: '自评健康（GENHLTH）', type: 'select', options: [[1, '优'], [2, '很好'], [3, '好'], [4, '一般'], [5, '差']], default: 3 },
-    { name: 'diffwalk', label: '行走困难（DIFFWALK）', type: 'select', options: [[1, '是'], [2, '否']], default: 2 },
-    { name: 'medcost', label: '费用障碍（MEDCOST）', type: 'select', options: [[1, '是'], [2, '否']], default: 2 },
+    { name: 'diffwalk', label: '行走困难（DIFFWALK）', type: 'select', options: [[1, '是'], [0, '否']], default: 0 },
+    { name: 'medcost', label: '费用障碍（MEDCOST）', type: 'select', options: [[1, '是'], [0, '否']], default: 0 },
     { name: 'menthlth', label: '心理不良天数（0-30）', type: 'number', min: 0, max: 30, step: 1, default: 0 },
     { name: 'educa', label: '教育（EDUCA）', type: 'select', options: [[1, '未上学'], [2, '小学'], [3, '初中'], [4, '高中'], [5, '大学肄业'], [6, '大学毕业']], default: 4 },
     { name: 'income_grp', label: '收入组（_INCOMG）', type: 'select', options: [[1, '<1.5万$'], [2, '1.5-2万$'], [3, '2-2.5万$'], [4, '2.5-3.5万$'], [5, '3.5-5万$'], [6, '5-7.5万$'], [7, '7.5-10万$'], [8, '≥10万$']], default: 5 },
@@ -173,7 +184,7 @@
       text: '戒烟干预：转介戒烟门诊 / 尼古丁替代疗法，重点降低心血管与慢阻肺风险'
     },
     {
-      id: 'inactivity', match: function (v) { return v.phys_activity === 2; },
+      id: 'inactivity', match: function (v) { return v.phys_activity === 0; },
       tier: '高优先级', factorKey: 'no_physical_activity',
       text: '运动处方：从每周 3×20 分钟快走起步，逐步达到每周 ≥150 分钟中等强度活动'
     },
@@ -188,7 +199,7 @@
       text: '自评健康偏差：安排综合健康评估（含慢病并发症筛查）并缩短随访间隔'
     },
     {
-      id: 'diffwalk', match: function (v) { return v.diffwalk === 1; },
+      id: 'diffwalk', match: function (v) { return v.diffwalk === 1 || v.diffwalk === 2; },
       tier: '中优先级', factorKey: 'walking_difficulty',
       text: '行走受限：转康复科做运动能力评估，制定低冲击训练与跌倒预防方案'
     },
@@ -218,7 +229,7 @@
     FIPS: FIPS, NO_GEOMETRY: NO_GEOMETRY,
     padFips: padFips, stateName: stateName, stateShort: stateShort, stateFull: stateFull,
     METRICS: METRICS, METRIC_BY_KEY: METRIC_BY_KEY,
-    DISEASE_TO_METRIC: DISEASE_TO_METRIC, FACTOR_TO_METRIC: FACTOR_TO_METRIC,
+    DISEASE_TO_METRIC: DISEASE_TO_METRIC, FACTOR_TO_METRIC: FACTOR_TO_METRIC, FACTOR_ALIAS: FACTOR_ALIAS,
     PALETTE: PALETTE, DISEASE_COLOR: DISEASE_COLOR,
     AGE_GROUPS: AGE_GROUPS, PREDICT_FIELDS: PREDICT_FIELDS, ADVICE_RULES: ADVICE_RULES,
     pct: pct, int: int, compact: compact, metricValue: metricValue, metricUnit: metricUnit,

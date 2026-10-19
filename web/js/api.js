@@ -164,7 +164,8 @@
       return request(path, Object.assign({ method: 'POST', body: body }, options || {}));
     },
     health: function (options) {
-      return request('/api/v1/health', Object.assign({ retries: 1, timeoutMs: 4000 }, options || {}));
+      /* 模型首次加载时后端可能瞬时变慢，健康检查给 8s，避免误报"未连接" */
+      return request('/api/v1/health', Object.assign({ retries: 1, timeoutMs: 8000 }, options || {}));
     }
   };
 })(window.BRFSS = window.BRFSS || {});

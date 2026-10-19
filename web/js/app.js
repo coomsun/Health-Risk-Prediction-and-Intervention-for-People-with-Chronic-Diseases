@@ -694,11 +694,13 @@
       lines.innerHTML =
         '<div class="result-line"><span>风险等级</span><b><span class="risk-tag ' + levelClass + '">' + escapeHtml(data.riskLevel) + '</span></b></div>' +
         '<div class="result-line"><span>阳性概率</span><b>' + D.pct(data.probability, 2) + '</b></div>' +
-        '<div class="result-line"><span>预测标签</span><b>' + (data.prediction === 1 ? '共病阳性' : '共病阴性') + '</b></div>' +
+        '<div class="result-line"><span>预测标签（0.5 判定）</span><b>' + (data.prediction === 1 ? '共病阳性' : '共病阴性') + '</b></div>' +
         '<div class="result-line"><span>判定阈值</span><b>中 ≥ ' + D.pct(thr.low, 0) + ' · 高 ≥ ' + D.pct(thr.high, 0) + '</b></div>' +
         '<div class="result-line"><span>模型文件</span><b>' + escapeHtml((data.model && data.model.fileName) || '—') + '</b></div>' +
         '<div class="result-line"><span>缺失特征</span><b>' + ((data.missingFeatures && data.missingFeatures.length) ? escapeHtml(data.missingFeatures.length + ' 个（已按缺失值处理）') : '无') + '</b></div>' +
-        '<div class="result-line"><span>接口延迟</span><b>' + (data.latencyMs == null ? '—' : data.latencyMs) + ' ms</b></div>';
+        '<div class="result-line"><span>接口延迟</span><b>' + (data.latencyMs == null ? '—' : data.latencyMs) + ' ms</b></div>' +
+        '<p class="drill-meta" style="margin-top:6px">口径：风险等级按后端阈值（中 ≥ ' + D.pct(thr.low, 0) + '、高 ≥ ' + D.pct(thr.high, 0) + '）分档，' +
+        '与"预测标签"的 0.5 判定是两个不同口径，可能同时出现"高风险 + 标签阴性"。</p>';
     }
     renderAdvice(data);
   }
@@ -712,7 +714,11 @@
     });
     var factorIndex = {};
     var factors = (state.cache.factors && state.cache.factors.items) || [];
-    factors.forEach(function (it) { factorIndex[it.key] = it; });
+    factors.forEach(function (it) {
+      factorIndex[it.key] = it;
+      var alias = D.FACTOR_ALIAS[it.key];
+      if (alias) factorIndex[alias] = it;   /* 兼容后端 key 命名调整 */
+    });
 
     var base = [];
     if (data.riskLevel === '高风险') {
