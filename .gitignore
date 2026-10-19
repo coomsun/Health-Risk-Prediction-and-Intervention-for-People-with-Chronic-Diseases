@@ -40,3 +40,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# 特征工程中间产物（19MB，可由 04_features.py 重建）
+artifacts/model/*.parquet
