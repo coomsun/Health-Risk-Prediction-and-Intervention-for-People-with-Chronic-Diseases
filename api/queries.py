@@ -322,7 +322,8 @@ TREND_METRICS: dict[str, MetricDef] = {
         "heavy_drink_rate",
         "重度饮酒率",
         "ratio",
-        "SUM(CASE WHEN heavy_drink = 1 THEN 1 ELSE 0 END)",
+        # heavy_drink 取自 _RFBING6：1=否 / 2=是（与慢病标志位"1=是"相反），据库内实际编码取 2
+        "SUM(CASE WHEN heavy_drink = 2 THEN 1 ELSE 0 END)",
         "COUNT(heavy_drink)",
         ("heavy_drink",),
     ),
@@ -350,8 +351,9 @@ RISK_FACTORS: tuple[tuple[str, str, str, str, str], ...] = (
     ),
     (
         "heavy_drink",
-        "重度饮酒",
-        "SUM(CASE WHEN heavy_drink = 1 THEN 1 ELSE 0 END)",
+        "重度饮酒（_RFBING6=2）",
+        # _RFBING6 原始编码 1=否 / 2=是，与慢病标志位相反，此处按库内实际编码判定暴露
+        "SUM(CASE WHEN heavy_drink = 2 THEN 1 ELSE 0 END)",
         "COUNT(heavy_drink)",
         "heavy_drink",
     ),
