@@ -35,7 +35,7 @@ PASS  A7② 越界就地提示字段名与区间且不发请求 | 请求数=0 ms
 PASS  A7④ retries=1：网络失败只尝试 2 次（旧配置为 4 次） | 尝试次数=2
 PASS  A7⑤ 失败后保留已填数值 | bmi=29.9 age_grp=8
 PASS  A7 失败提示仍为「预测失败：…」 | 预测失败：网络请求失败：Failed to fetch（后端是否已启动？） code=-1
-PASS  端到端：真实 /predict 成功且提示格式达标 | 预测完成 · 延迟 8 ms（含建议 2 条，接口往返 0.26s）
+PASS  端到端：真实 /predict 成功且提示格式达标 | 预测完成 · 延迟 9 ms（含建议 2 条，接口往返 0.27s）
 PASS  A7 页面加载即预取令牌（首查不必等登录） | auth=demo
 PASS  注入渲染异常只产生 1 条由 reportError 主动上报的 SEVERE | SEVERE=1
 PASS  最终刷新后 console SEVERE = 0 | SEVERE=0

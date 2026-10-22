@@ -9,9 +9,22 @@
   var P = D.PALETTE;
   var instances = {};   /* id -> { chart, container } */
 
+  /* 图表调色板：全部取自 CSS 令牌（与 :root 的 --c-* 同源），
+     替换 ECharts 出厂浅色默认色板 #5470c6 系列，8 个实例统一生效。 */
+  var CHART_COLORS = [P.primary, P.teal, P.amber, P.violet, P.rose, P.cyan, P.green, P.fuchsia];
+  var THEME_NAME = 'brfss-dark';
+  var THEME = null;
+  if (window.echarts && typeof window.echarts.registerTheme === 'function') {
+    window.echarts.registerTheme(THEME_NAME, { color: CHART_COLORS });
+    THEME = THEME_NAME;
+  }
+
   var AXIS_LABEL = { color: P.text2, fontSize: 11 };
   var AXIS_LINE = { lineStyle: { color: P.lineStrong } };
   var SPLIT_LINE = { lineStyle: { color: P.line, type: 'dashed' } };
+  /* 不显示网格的轴也显式带上同一网格色：ECharts 出厂默认 splitLine 是浅色 #E0E6F1，
+     否则 getOption 中一页并存两套网格色（隐藏轴上不可见，但配置仍是浅色）。 */
+  var SPLIT_LINE_OFF = { show: false, lineStyle: { color: P.line, type: 'dashed' } };
   var TOOLTIP = {
     backgroundColor: 'rgba(10,18,32,0.96)',
     borderColor: P.lineStrong,
@@ -58,8 +71,10 @@
     var hit = instances[id];
     if (hit && hit.container === container) return hit.chart;
     if (hit) { hit.chart.dispose(); delete instances[id]; }
-    var chart = window.echarts.init(container, null, { renderer: 'canvas' });
+    var chart = window.echarts.init(container, THEME, { renderer: 'canvas' });
     instances[id] = { chart: chart, container: container };
+    /* 地图：排除区域（波多黎各 '72'）在绘制层置为不可见，见 hideExcludedRegions() */
+    if (id === 'chart-geo') bindExcludedRegionHide(chart);
     if (window.ResizeObserver) {
       var ro = new ResizeObserver(function () { chart.resize(); });
       ro.observe(container);
@@ -103,6 +118,7 @@
   function hbar(rows, opts) {
     /* rows: [{ name, value(展示值), color, tooltip }]，已按需要的顺序排好（自内向外） */
     return {
+      color: CHART_COLORS,
       animationDuration: 420,
       grid: { left: 8, right: 76, top: opts.top || 26, bottom: 8, containLabel: true },
       toolbox: toolbox(opts.id),
@@ -120,6 +136,7 @@
         data: rows.map(function (r) { return r.name; }),
         axisLabel: Object.assign({ width: opts.labelWidth || 108, overflow: 'truncate' }, AXIS_LABEL),
         axisLine: AXIS_LINE,
+        splitLine: SPLIT_LINE_OFF,
         axisTick: { show: false }
       },
       series: [{
@@ -193,6 +210,7 @@
     var values = series.map(function (s) { return isRatio ? Number((s.value * 100).toFixed(3)) : Number(s.value); });
     var unitText = isRatio ? '率(%)' : (payload.metric === 'chronic_avg' ? '种/人' : '样本量(人)');
     var opt = {
+      color: CHART_COLORS,
       animationDuration: 420,
       grid: { left: 10, right: 18, top: 42, bottom: 6, containLabel: true },
       toolbox: toolbox('chart-trend'),
@@ -217,6 +235,7 @@
         boundaryGap: false,
         axisLabel: AXIS_LABEL,
         axisLine: AXIS_LINE,
+        splitLine: SPLIT_LINE_OFF,
         axisTick: { show: false }
       },
       yAxis: {
@@ -313,6 +332,7 @@
       };
     });
     var opt = {
+      color: CHART_COLORS,
       animationDuration: 420,
       grid: { left: 8, right: 8, top: 26, bottom: 30, containLabel: true },
       toolbox: toolbox('chart-stratify-level'),
@@ -338,7 +358,7 @@
         type: 'value', max: 100, axisLabel: Object.assign({ formatter: '{value}%' }, AXIS_LABEL),
         splitLine: SPLIT_LINE, axisLine: { show: false }
       },
-      yAxis: { type: 'category', data: ['风险分层构成'], axisLabel: AXIS_LABEL, axisLine: AXIS_LINE, axisTick: { show: false } },
+      yAxis: { type: 'category', data: ['风险分层构成'], axisLabel: AXIS_LABEL, axisLine: AXIS_LINE, splitLine: SPLIT_LINE_OFF, axisTick: { show: false } },
       series: series
     };
     opt.linkEntries = levels.map(function (lv, si) {
@@ -351,6 +371,7 @@
   function chronicDistOption(payload) {
     var dist = payload.distribution || [];
     var opt = {
+      color: CHART_COLORS,
       animationDuration: 420,
       grid: { left: 8, right: 12, top: 30, bottom: 6, containLabel: true },
       toolbox: toolbox('chart-chronic-dist'),
@@ -367,7 +388,7 @@
       xAxis: {
         type: 'category',
         data: dist.map(function (d) { return d.label; }),
-        axisLabel: AXIS_LABEL, axisLine: AXIS_LINE, axisTick: { show: false }
+        axisLabel: AXIS_LABEL, axisLine: AXIS_LINE, splitLine: SPLIT_LINE_OFF, axisTick: { show: false }
       },
       yAxis: {
         type: 'value', name: '样本量(人)', nameTextStyle: { color: P.dim, fontSize: 11 },
@@ -397,11 +418,23 @@
   }
 
   /* ---------------------------------------------------- 4. 州级地图 */
+  /* 地图 series 额外剔除的 FIPS：'72' 波多黎各在 us-states.geojson 里是本土框外的一块孤立方块
+     （AK/HI 是 inset 画在大陆框内），易被误读为本土州。只剔除地图 series 数据，
+     不动 vendor/geojson 源文件、不动接口返回、不影响任何其它面板口径。 */
+  var MAP_EXCLUDE_FIPS = ['72'];
+  /* 连续色带：冷端不再用 #123456（与面板底色 #152238 几乎同色，低值州会成"黑洞"），
+     改为与底色可辨的深蓝起，仍保持"冷=低、暖=高"的原语义与档数级差。 */
+  var GEO_RAMP = ['#2b6cb0', '#22a3b8', '#2dd4bf', '#f5a524', '#fb7185'];
+  /* 无数据州：中灰，与底色可辨，且不与色带任意一档重合 */
+  var GEO_NO_DATA = '#3a4a63';
   function geoOption(payload, metricKey, selectedFips) {
     var isRatio = payload.unit === 'ratio';
     var items = payload.items || [];
     var data = items
-      .filter(function (it) { return D.NO_GEOMETRY.indexOf(D.padFips(it.stateFips)) < 0; })
+      .filter(function (it) {
+        var fips = D.padFips(it.stateFips);
+        return D.NO_GEOMETRY.indexOf(fips) < 0 && MAP_EXCLUDE_FIPS.indexOf(fips) < 0;
+      })
       .map(function (it) {
         return {
           name: D.padFips(it.stateFips),
@@ -413,11 +446,14 @@
     var min = values.length ? Math.min.apply(null, values) : 0;
     var max = values.length ? Math.max.apply(null, values) : 1;
     var opt = {
+      color: CHART_COLORS,
       animationDuration: 520,
       toolbox: toolbox('chart-geo'),
       tooltip: Object.assign({
         trigger: 'item',
         formatter: function (p) {
+          /* 排除区域（波多黎各）保留了绘制元素与命中（避免提示/下钻穿透到相邻州），此处不给任何提示 */
+          if (p && p.name != null && MAP_EXCLUDE_FIPS.indexOf(String(p.name)) >= 0) return '';
           var raw = p.data && p.data.raw;
           if (!raw) return '<b>' + D.stateFull(p.name) + '</b><br/>无数据（该州未返回）';
           return '<b>' + D.stateFull(raw.stateFips) + '</b><br/>' +
@@ -437,7 +473,7 @@
         calculable: true,
         text: [isRatio ? '高 ' + max.toFixed(1) + '%' : '高 ' + D.compact(max), isRatio ? '低 ' + min.toFixed(1) + '%' : '低 ' + D.compact(min)],
         textStyle: { color: P.text2, fontSize: 10 },
-        inRange: { color: ['#123456', '#1b5e8a', '#22a3b8', '#2dd4bf', '#f5a524', '#fb7185'] }
+        inRange: { color: GEO_RAMP }
       },
       series: [{
         name: payload.label,
@@ -450,7 +486,7 @@
         layoutSize: '96%',
         label: { show: false, formatter: function (p) { return D.stateShort(p.name); } },
         itemStyle: {
-          areaColor: '#16233a',
+          areaColor: GEO_NO_DATA,
           borderColor: 'rgba(120,152,200,0.45)',
           borderWidth: 0.7,
           shadowColor: 'rgba(0,0,0,0.45)',
@@ -464,6 +500,21 @@
           label: { show: true, color: '#fff', fontSize: 11, formatter: function (p) { return D.stateShort(p.name); } },
           itemStyle: { areaColor: P.amber, borderColor: '#fff', borderWidth: 1.2 }
         },
+        /* 排除区域（波多黎各）覆盖声明。注意：ECharts 5 的 map series 区域样式取自数据项模型，
+           regions 只被 geo 组件消费，这里的覆盖对 map series 是空操作（实测像素与 tooltip 均无变化）。
+           真正的"渲染层不可见"由 hideExcludedRegions() 在每次重绘后完成，此声明保留用于表达意图。 */
+        regions: MAP_EXCLUDE_FIPS.map(function (fips) {
+          return {
+            name: fips,
+            silent: true,
+            itemStyle: { areaColor: 'transparent', borderColor: 'transparent', borderWidth: 0 },
+            label: { show: false },
+            emphasis: {
+              label: { show: false },
+              itemStyle: { areaColor: 'transparent', borderColor: 'transparent', borderWidth: 0 }
+            }
+          };
+        }),
         data: data
       }]
     };
@@ -480,6 +531,68 @@
       };
     });
     return opt;
+  }
+
+  /* ---- 排除区域（波多黎各 FIPS '72'）的渲染层剔除 ----
+     ECharts 5 的 map series 会把地图中未出现在 series.data 的区域补成空数据项继续绘制，
+     这些区域的样式来自数据项模型，series.regions 对其不生效（见上面 regions 处的说明）。
+     这里在每次重绘后把该区域的绘制元素改成"全透明 + 无状态样式"：
+       · 透明填充/描边、无阴影 ⇒ 视觉上完全不可见（不依赖底色，也不会变成另一种可见色块）；
+       · 保留命中（不置 ignore/silent）⇒ 鼠标落在原方块位置命中的是它自己，不会穿透到相邻州
+         （实测置 silent 后该点会落到佛州 bbox 上，弹出佛州提示），点击下钻也仍指向该州；
+       · 清空 states ⇒ 悬停不换色、不弹 label；
+       · 悬停提示由 geoOption 的 tooltip.formatter 对该州返回空串。
+     区域元素由 MapDraw 在每次重绘时重建（resize / restore / setOption 都会触发），
+     所以挂在 'rendered' 事件上反复执行；元素上的 ECData（ECharts 内部数据索引）用于定位区域。 */
+  var EC_DATA_KEY = null;
+  function ecData(el) {
+    if (!EC_DATA_KEY) {
+      var keys = Object.keys(el);
+      for (var k = 0; k < keys.length; k++) {
+        if (keys[k].indexOf('__ec_inner_') === 0) { EC_DATA_KEY = keys[k]; break; }
+      }
+    }
+    return EC_DATA_KEY ? el[EC_DATA_KEY] : null;
+  }
+
+  function hideExcludedRegions(chart) {
+    var model = chart.getModel && chart.getModel();
+    var series = model && model.getSeriesByIndex(0);
+    var data = series && series.getData && series.getData();
+    if (!data || !data.count || !data.count()) return;
+    var indexes = MAP_EXCLUDE_FIPS
+      .map(function (fips) { return data.indexOfName(fips); })
+      .filter(function (idx) { return idx >= 0; });
+    if (!indexes.length) return;
+    var list = chart.getZr().storage.getDisplayList();
+    var changed = false;
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      var ec = ecData(el);
+      if (!ec || ec.seriesIndex !== 0 || indexes.indexOf(ec.dataIndex) < 0) continue;
+      var style = el.style;
+      if (style && style.fill !== 'transparent') {
+        style.fill = 'transparent';
+        style.stroke = 'transparent';
+        style.lineWidth = 0;
+        style.shadowBlur = 0;
+        style.shadowColor = 'transparent';
+        changed = true;
+      }
+      el.silent = false;   /* 保留命中：挡在相邻州前面，提示与下钻都不会落到别的州 */
+      el.states = {};      /* 悬停/选中态失效：不换色、不弹 label */
+      if (el.dirtyStyle) el.dirtyStyle();
+    }
+    /* 本帧已经画上去的像素需要再刷新一次才会消失；下一次 'rendered' 时 changed 为 false，不会递归 */
+    if (changed) chart.getZr().refresh();
+  }
+
+  function bindExcludedRegionHide(chart) {
+    if (!chart || chart.__excludedRegionBound) return;
+    chart.__excludedRegionBound = true;
+    chart.on('rendered', function () {
+      try { hideExcludedRegions(chart); } catch (e) { /* 内部结构变化时不阻断主流程 */ }
+    });
   }
 
   /* ---------------------------------------------------- 7. 模型指标对比 */
@@ -561,6 +674,7 @@
     });
 
     var opt = {
+      color: CHART_COLORS,
       animationDuration: 420,
       /* top 由 34 → 46：图例固定单行（scroll），并给 y 轴名称留出空隙 */
       grid: { left: 10, right: 14, top: 46, bottom: 8, containLabel: true },
@@ -599,6 +713,7 @@
           formatter: shortModelName
         }),
         axisLine: AXIS_LINE,
+        splitLine: SPLIT_LINE_OFF,
         axisTick: { show: false }
       },
       yAxis: {
@@ -628,6 +743,7 @@
   function ageOption(payload) {
     var rows = (payload.byAge || []).slice().sort(function (a, b) { return a.ageGrp - b.ageGrp; });
     var opt = {
+      color: CHART_COLORS,
       animationDuration: 420,
       grid: { left: 8, right: 18, top: 34, bottom: 6, containLabel: true },
       toolbox: toolbox('chart-age'),
@@ -647,6 +763,7 @@
         data: rows.map(function (r) { return r.ageLabel; }),
         axisLabel: Object.assign({ rotate: rows.length > 10 ? 32 : 0, hideOverlap: true }, AXIS_LABEL),
         axisLine: AXIS_LINE,
+        splitLine: SPLIT_LINE_OFF,
         axisTick: { show: false }
       },
       yAxis: [
@@ -658,7 +775,7 @@
         {
           type: 'value', name: '共病率(%)', nameTextStyle: { color: P.amber, fontSize: 11 },
           axisLabel: Object.assign({ formatter: '{value}%' }, AXIS_LABEL),
-          splitLine: { show: false }, axisLine: { show: false }
+          splitLine: SPLIT_LINE_OFF, axisLine: { show: false }
         }
       ],
       series: [
