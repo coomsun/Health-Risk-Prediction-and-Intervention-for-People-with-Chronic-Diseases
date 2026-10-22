@@ -37,98 +37,94 @@
   <div class="status" id="api-status" title="后端连通状态">
     <span class="dot dot-wait"></span><span class="status-text">连接后端…</span>
   </div>
+
+  <!-- 当前联动/下钻选中项：一键清除即恢复全量 -->
+  <div class="chip-bar" id="chip-bar" hidden aria-label="当前联动与下钻选择"></div>
 </header>
 
 <main class="grid" id="main-grid">
 
   <!-- 1. KPI 卡片区 -->
-  <section class="panel span-3" id="panel-kpi">
+  <section class="panel span-3" id="panel-kpi" title="口径：全库清洗后样本；共病 = 慢病标志位之和 ≥ 2 种（8 类慢病见下方条形图）">
     <div class="panel-head">
       <h2>核心指标总览</h2>
-      <p class="panel-hint">口径：全库清洗后样本；共病 = 慢病标志位之和 ≥ 2 种（8 类慢病见下方条形图）</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
   <!-- 2. 各慢病患病率 -->
-  <section class="panel span-1" id="panel-prevalence">
+  <section class="panel span-1" id="panel-prevalence" title="横向条形图：类别名较长且需要按患病率排序比较，横向布局标签不截断。单位：率(%)，n = 该病有效样本">
     <div class="panel-head">
       <h2>各慢病患病率（排序）</h2>
-      <p class="panel-hint">横向条形图：类别名较长且需要按患病率排序比较，横向布局标签不截断。单位：率(%)，n = 该病有效样本。点击条形 → 联动趋势图与地图指标</p>
+      <p class="panel-hint">点击条形 → 联动趋势图与地图指标</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
   <!-- 3. 年度趋势 -->
-  <section class="panel span-2" id="panel-trend">
+  <section class="panel span-2" id="panel-trend" title="折线图：时间序列强调逐年变化方向与速率；悬停显示分子/分母。率类指标单位为 %，样本量为人次">
     <div class="panel-head">
       <h2>指标年度趋势</h2>
       <select id="trend-metric" class="inline-select" aria-label="趋势指标"></select>
-      <p class="panel-hint">折线图：时间序列强调逐年变化方向与速率；悬停显示分子/分母。率类指标单位为 %，样本量为人次</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
   <!-- 4. 州级地图 -->
-  <section class="panel span-2" id="panel-geo">
+  <section class="panel span-2" id="panel-geo" title="分级统计地图（choropleth）：空间分布是天然的地理维度，颜色深浅表达率的高低；滚轮/按钮可缩放">
     <div class="panel-head">
       <h2>州级指标地图</h2>
       <select id="geo-metric" class="inline-select" aria-label="地图指标"></select>
-      <p class="panel-hint">分级统计地图（choropleth）：空间分布是天然的地理维度，颜色深浅表达率的高低。点击任一州 → 下钻该州慢病明细</p>
+      <p class="panel-hint">点击任一州 → 下钻该州慢病明细</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
-  <!-- 5. 危险因素暴露率 -->
-  <section class="panel span-1" id="panel-factors">
+  <!-- 5. 地图下钻明细（与州级地图同排：二者联动使用） -->
+  <section class="panel span-1" id="panel-drill" title="点击地图中的州后，此面板展示该州 8 类慢病患病率与该州样本量，并可一键把该州应用到全局筛选">
+    <div class="panel-head">
+      <h2>地图下钻明细</h2>
+    </div>
+    <div class="panel-body" data-body></div>
+  </section>
+
+  <!-- 6. 危险因素暴露率 -->
+  <section class="panel span-1" id="panel-factors" title="横向条形图（而非雷达）：各因素的分母口径互不相同（例如重度饮酒的分母只含「有饮酒记录者」），雷达图会把不同分母放进同一半径尺度，条形图能并列展示率与 n。点击可联动的因素 → 切换趋势指标">
     <div class="panel-head">
       <h2>可干预危险因素暴露率</h2>
-      <p class="panel-hint">横向条形图（而非雷达）：各因素的分母口径互不相同（例如重度饮酒的分母只含"有饮酒记录者"），雷达图会把不同分母放进同一半径尺度，条形图能并列展示率与 n。点击可联动的因素 → 切换趋势指标</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
-  <!-- 6. 风险分层 -->
-  <section class="panel span-2" id="panel-stratify">
+  <!-- 7. 风险分层 -->
+  <section class="panel span-2" id="panel-stratify" title="堆叠条：分层构成属于「整体=100%」的部分-整体关系，堆叠条可直接读数且支持 3 段以上；慢病数分布用柱状图比较各档样本量">
     <div class="panel-head">
       <h2>风险分层与慢病数分布</h2>
-      <p class="panel-hint">堆叠条：分层构成属于「整体=100%」的部分-整体关系，堆叠条可直接读数且支持 3 段以上；慢病数分布用柱状图比较各档样本量</p>
-    </div>
-    <div class="panel-body" data-body></div>
-  </section>
-
-  <!-- 7. 模型指标对比 -->
-  <section class="panel span-1" id="panel-metrics">
-    <div class="panel-head">
-      <h2>模型指标对比</h2>
-      <p class="panel-hint">分组柱状图：默认展示 AUC-ROC 与 PR-AUC 两项核心指标，点击图例可切换其余指标（基线 0–1）</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
   <!-- 8. 年龄组共病率 -->
-  <section class="panel span-2" id="panel-age">
+  <section class="panel span-2" id="panel-age" title="柱线组合双轴：柱=该年龄组样本量（n），线=共病率(%)。样本量与率量级差 4 个数量级，用双轴而非双系列同轴，避免率曲线被压平">
     <div class="panel-head">
       <h2>年龄组共病率与样本量</h2>
-      <p class="panel-hint">柱线组合双轴：柱=该年龄组样本量（n），线=共病率(%)。样本量与率量级差 4 个数量级，用双轴而非双系列同轴，避免率曲线被压平</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
-  <!-- 9. 地图下钻明细 -->
-  <section class="panel span-1" id="panel-drill">
+  <!-- 9. 模型指标对比 -->
+  <section class="panel span-1" id="panel-metrics" title="分组柱状图：默认展示 AUC-ROC 与 PR-AUC 两项核心指标">
     <div class="panel-head">
-      <h2>地图下钻明细</h2>
-      <p class="panel-hint">点击地图中的州后，此面板展示该州 8 类慢病患病率与该州样本量，并可一键把该州应用到全局筛选</p>
+      <h2>模型指标对比</h2>
+      <p class="panel-hint">点击图例可切换其余指标（基线 0–1）</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
 
   <!-- 10. 在线风险预测 -->
-  <section class="panel span-3" id="panel-predict">
+  <section class="panel span-3" id="panel-predict" title="表单特征名与 fact_brfss 列名一致，提交后返回阳性概率、风险等级与模型信息；干预建议中的「人群暴露率」取自本页危险因素接口">
     <div class="panel-head">
       <h2>在线个体风险预测</h2>
-      <p class="panel-hint">表单特征名与 <code>fact_brfss</code> 列名一致，提交 <code>POST /api/v1/predict</code> 后返回阳性概率、风险等级与模型信息；干预建议中的「人群暴露率」取自本页危险因素接口</p>
     </div>
     <div class="panel-body" data-body></div>
   </section>
@@ -136,8 +132,7 @@
 </main>
 
 <footer class="footer">
-  <span>数据来源：CDC BRFSS（经 HuggingFace 镜像获取）· 全部数字均实时请求自 <code id="footer-api">/api/v1</code></span>
-  <span id="footer-trace">traceId —</span>
+  <span>数据来源：CDC BRFSS</span>
 </footer>
 
 <script src="vendor/echarts.min.js"></script>

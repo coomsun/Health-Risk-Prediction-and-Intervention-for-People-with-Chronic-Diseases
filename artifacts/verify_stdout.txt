@@ -1,0 +1,100 @@
+== 页面加载完成: True | URL: file:///D:/%E6%9C%9F%E6%9C%AB%E4%BD%9C%E4%B8%9A/%E8%AF%BE%E7%A8%8B%E4%BA%8C_%E6%B5%B7%E9%87%8F%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E5%88%86%E6%9E%90%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E5%AE%9E%E6%88%98/%E6%85%A2%E6%80%A7%E7%97%85%E6%82%A3%E8%80%85%E5%81%A5%E5%BA%B7%E9%A3%8E%E9%99%A9%E9%A2%84%E6%B5%8B%E4%B8%8E%E5%B9%B2%E9%A2%84/web/index.html?api=http://127.0.0.1:8000
+   后端: http://127.0.0.1:8000 | 已预取令牌: True
+面板顺序: kpi(span3) > prevalence(span1) > trend(span2) > geo(span2) > drill(span1) > factors(span1) > stratify(span2) > age(span2) > metrics(span1) > predict(span3)
+  行 top≈136   panel-kpi                          跨度合计=3
+  行 top≈304   panel-prevalence + panel-trend     跨度合计=3
+  行 top≈779   panel-geo + panel-drill            跨度合计=3
+  行 top≈1306  panel-factors + panel-stratify     跨度合计=3
+  行 top≈1756  panel-age + panel-metrics          跨度合计=3
+  行 top≈2191  panel-predict                      跨度合计=3
+PASS  A1a 每行 span 合计 = 3  | 共 6 行
+  geo: top=779 left=18 right=1026 | drill: top=779 left=1040 | Δtop=0 gap=14
+PASS  A1b geo/drill 同一水平位置 (Δtop<=2)  | Δtop=0
+PASS  A1c drill 紧跟 geo 右侧 (left>=right-2)  | gap=14px
+PASS  A1d drill 在 DOM 中紧跟 geo
+PASS  A1e 面板相对顺序符合方案  | kpi > prevalence > trend > geo > drill > factors > stratify > age > metrics > predict
+panel-hint: 总数=3 可见=3
+   保留: 点击条形 → 联动趋势图与地图指标
+   保留: 点击任一州 → 下钻该州慢病明细
+   保留: 点击图例可切换其余指标（基线 0–1）
+PASS  A2 可见 panel-hint <= 3  | 可见=3（改造前 10）
+  各面板 title 长度: [['panel-kpi', 42], ['panel-prevalence', 51], ['panel-trend', 46], ['panel-geo', 51], ['panel-drill', 46], ['panel-factors', 94], ['panel-stratify', 62], ['panel-age', 64], ['panel-metrics', 34], ['panel-predict', 66]]
+PASS  A2b 被删说明文字已转入 panel title（无面板缺 title）  | 缺 title: []
+顶栏 status.textContent = '后端正常'
+顶栏 title = 'version 1.0.0 · fact_brfss 213.6 万 行 · 53.03ms / dbPath: D:\\期末作业\\发布包\\海量数据挖掘分析与可视化实战_便携版\\app\\db\\chronic_risk.db / modelReady: true'
+PASS  A3 顶栏严格为「后端正常」  | 实际='后端正常'
+PASS  A3b 版本/行数等细节仍在 title（信息未丢）
+页脚文本 = '数据来源：CDC BRFSS'
+PASS  A4a 页脚已无 #footer-trace / #footer-api
+PASS  A4b 页脚不含 traceId
+PASS  A4c 页脚不含 /api/v1
+PASS  A5 页脚数据来源仅保留 CDC BRFSS  | '数据来源：CDC BRFSS'
+  toolbox chart-prevalence -> ['restore', 'saveAsImage']
+  toolbox chart-trend -> ['restore', 'saveAsImage']
+  toolbox chart-geo -> ['restore', 'saveAsImage']
+  toolbox chart-factors -> ['restore', 'saveAsImage']
+  toolbox chart-stratify-level -> ['restore', 'saveAsImage']
+  toolbox chart-chronic-dist -> ['restore', 'saveAsImage']
+  toolbox chart-metrics -> ['restore', 'saveAsImage']
+  toolbox chart-age -> ['restore', 'saveAsImage']
+PASS  A6⑤ 8 张图均提供 toolbox.saveAsImage
+趋势图首个数据点: 2019=18.227 像素=(50,198)
+hover(趋势图) 结果: {'audit': 1, 'geoLinked': True, 'link': '2019', 'linkedPanels': ['panel-geo'], 'topics': 'metric:multimorbidity_rate,year:2019'}
+PASS  A6① hover 触发跨图联动（body[data-hover-link] 有值）  | link='2019'
+PASS  A6① 相关图 geo 面板被同步高亮  | 已高亮面板=['panel-geo']
+PASS  A6① 真实派发 echarts dispatchAction highlight  | hoverAudit=1
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_hover_linked_full.png (0,0,1563,2621)
+PASS  A6① 离开后取消高亮（downplay + 清除标记）  | {"link": null, "linked": 0}
+KPI 常态: {'border': 'rgba(120, 152, 200, 0.18)', 'transform': 'none'}  悬停: {'border': 'rgb(79, 140, 255)', 'transform': 'matrix(1, 0, 0, 1, 0, -2)'}
+PASS  A6④ KPI 卡片有可见 hover 反馈  | {'border': 'rgba(120, 152, 200, 0.18)', 'transform': 'none'} -> {'border': 'rgb(79, 140, 255)', 'transform': 'matrix(1, 0, 0, 1, 0, -2)'}
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_kpi_hover.png (10,128,1545,298)
+chart-host box-shadow 常态: none  悬停: rgba(79, 140, 255, 0.22) 0px 0px 0px 1px inset
+PASS  A6④ 图表容器有可见 hover 反馈  | none -> rgba(79, 140, 255, 0.22) 0px 0px 0px 1px inset
+chip 条: {'hidden': False, 'texts': ['metric:趋势/地图指标：糖尿病患病率×', 'drill:下钻州：加利福尼亚州 CA×']}
+PASS  A6② 联动/下钻显示为 chip  | ['metric:趋势/地图指标：糖尿病患病率×', 'drill:下钻州：加利福尼亚州 CA×']
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_chipbar.png (29,119,1526,169)
+清除下钻 chip 后: {'chips': 1, 'drill': None, 'drillBox': '未选择州占位', 'stateFilter': ''}
+PASS  A6② 清除下钻 chip → state.drill=null 且筛选回到全部州（恢复全量）  | {"chips": 1, "drill": null, "drillBox": "\u672a\u9009\u62e9\u5dde\u5360\u4f4d", "stateFilter": ""}
+清除指标 chip 后: {'barHidden': True, 'chips': 0, 'geoSel': 'multimorbidity_rate', 'geoTitle': False, 'metric': 'multimorbidity_rate', 'trendSel': 'multimorbidity_rate'}
+PASS  A6② 清除指标 chip → 恢复默认指标且 chip 条收起  | {"barHidden": true, "chips": 0, "geoSel": "multimorbidity_rate", "geoTitle": false, "metric": "multimorbidity_rate", "trendSel": "multimorbidity_rate"}
+Esc 清除后: {'chips': 0, 'drill': None, 'metric': 'multimorbidity_rate'} | 触发方式: 真实按键 send_keys(ESCAPE)
+PASS  A6③ Esc 清除联动与下钻  | {"chips": 0, "drill": null, "metric": "multimorbidity_rate"} 触发方式=真实按键 send_keys(ESCAPE)
+
+[A6 阶段结束] console 条目=0 SEVERE=0
+PASS  console SEVERE = 0（正常路径：加载/hover/chip/Esc）  | SEVERE=0
+
+== A7 预测表单加固 ==
+连发两次 submit: {"advice": 1, "calls": 1, "has32hex": false, "hasTrace": false, "lines": 7, "longTimers": [20000], "msg": "预测完成 · 延迟 137 ms", "riskTag": "中风险", "riskTopics": "level:中风险"}
+PASS  A7① in-flight 守卫：连点两次只发 1 次请求  | 实际请求数=1
+PASS  A7④ /predict 显式 timeoutMs=20000  | 长定时器=[20000]
+PASS  A4 预测成功提示为「预测完成 · 延迟 N ms」  | 实际='预测完成 · 延迟 137 ms'
+PASS  A4e 提示不含 traceId / 32 位十六进制串
+PASS  A7③ 结果正常渲染（风险标签 + 明细行 + 建议）  | tag=中风险 topics=level:中风险 lines=7 advice=1
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_predict_result.png (10,2183,1545,2696)
+注入渲染异常时: {"banner": true, "errors": "1", "msg": "预测已成功返回，但结果渲染异常：模拟渲染异常（详见页首错误条）"}
+PASS  A7③ 渲染异常不伪装成「预测失败」  | 预测已成功返回，但结果渲染异常：模拟渲染异常（详见页首错误条）
+PASS  A7③ 渲染异常走全局错误条（显性化）  | data-js-errors=1
+越界 BMI=99: {"calls": 0, "fieldErr": "允许区间 10–70", "invalid": true, "msg": "「BMI（bmi）」允许区间 10–70，未发出请求，请修改后重试", "value": "99"}
+PASS  A7② 越界就地提示字段名与区间且不发请求  | 请求数=0 msg='「BMI（bmi）」允许区间 10–70，未发出请求，请修改后重试' 字段提示='允许区间 10–70'
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_predict_invalid.png (10,2183,1545,2696)
+网络失败路径(0.8s): {"age": "8", "attempts": 2, "bmi": "29.9", "msg": "预测失败：网络请求失败：Failed to fetch（后端是否已启动？） code=-1"}
+PASS  A7④ retries=1：网络失败只尝试 2 次（旧配置为 4 次）  | 尝试次数=2
+PASS  A7⑤ 失败后保留已填数值  | bmi=29.9 age_grp=8
+PASS  A7 失败提示仍为「预测失败：…」  | 预测失败：网络请求失败：Failed to fetch（后端是否已启动？） code=-1
+真实后端预测(0.26s): {"advice": 2, "authUser": "demo", "firstLine": "高风险", "msg": "预测完成 · 延迟 8 ms", "tokenPrefetched": true}
+PASS  端到端：真实 /predict 成功且提示格式达标  | 预测完成 · 延迟 8 ms（含建议 2 条，接口往返 0.26s）
+PASS  A7 页面加载即预取令牌（首查不必等登录）  | auth=demo
+
+[故障注入阶段] console 条目=1 SEVERE=1（注入的渲染异常应恰好 1 条）
+   SEVERE: file:///D:/%E6%9C%9F%E6%9C%AB%E4%BD%9C%E4%B8%9A/%E8%AF%BE%E7%A8%8B%E4%BA%8C_%E6%B5%B7%E9%87%8F%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98%E5%88%86%E6%9E%90%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96%E5%AE%9E%E6%88%98/%E6%85%A2%E6%80%A7%E7%97%85%E6%82%A3%E8%80%85%E5%81%A5%E5%BA%B7%E9%A3%8E%E9%99%A9%E9%A2%84%E6%B5%
+页面自报异常: {'banner': False, 'n': None}
+PASS  注入渲染异常只产生 1 条由 reportError 主动上报的 SEVERE  | SEVERE=1
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_full.png (0,0,1563,2621)
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_geo_drill_row.png (10,771,1545,1300)
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_topbar.png (10,8,1560,130)
+截图: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\screenshots\web_footer.png (10,2553,1560,2595)
+最终刷新后 console 条目=0 SEVERE=0
+PASS  最终刷新后 console SEVERE = 0  | SEVERE=0
+
+==== 汇总：40 / 40 通过 ====
+逐项结果已存: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\verify_web_ui_summary.txt | 完整日志: D:\期末作业\课程二_海量数据挖掘分析与可视化实战\慢性病患者健康风险预测与干预\artifacts\verify_web_ui.log

@@ -22,6 +22,31 @@
   };
   var TITLE_STYLE = { color: P.text, fontSize: 12 };
 
+  /* 右上角快捷操作：保存图片 / 还原视图（所有图表统一） */
+  function toolbox(id) {
+    return {
+      right: 4,
+      top: 0,
+      itemSize: 13,
+      itemGap: 8,
+      iconStyle: { borderColor: P.text2 },
+      emphasis: { iconStyle: { borderColor: P.cyan } },
+      feature: {
+        restore: { title: '还原视图' },
+        saveAsImage: { title: '保存为图片', name: id, pixelRatio: 2, backgroundColor: P.bg }
+      }
+    };
+  }
+
+  /* 联动主题词：跨图 hover 联动按主题词取交集（如 metric:xxx / disease:xxx） */
+  function linkTopic(prefix, value) {
+    return value == null || value === '' ? null : prefix + value;
+  }
+
+  function compactTopics(list) {
+    return list.filter(function (t) { return !!t; });
+  }
+
   function el(id) {
     return document.getElementById(id);
   }
@@ -79,7 +104,8 @@
     /* rows: [{ name, value(展示值), color, tooltip }]，已按需要的顺序排好（自内向外） */
     return {
       animationDuration: 420,
-      grid: { left: 8, right: 76, top: opts.top || 14, bottom: 8, containLabel: true },
+      grid: { left: 8, right: 76, top: opts.top || 26, bottom: 8, containLabel: true },
+      toolbox: toolbox(opts.id),
       tooltip: Object.assign({ trigger: 'item', formatter: function (p) { return rows[p.dataIndex].tooltip || p.name; } }, TOOLTIP),
       xAxis: {
         type: 'value',
@@ -133,9 +159,16 @@
       };
     });
     var opt = hbar(rows, {
+      id: 'chart-prevalence',
       labelWidth: 120,
       valueFormatter: function (v) { return v + '%'; },
-      top: 10
+      top: 26
+    });
+    opt.linkEntries = items.map(function (it, i) {
+      return {
+        name: it.name, seriesIndex: 0, dataIndex: i,
+        topics: compactTopics(['disease:' + it.key, linkTopic('metric:', D.DISEASE_TO_METRIC[it.key])])
+      };
     });
     opt.xAxis.name = '患病率(%)';
     opt.xAxis.nameTextStyle = Object.assign({ align: 'right' }, TITLE_STYLE, { color: P.dim, padding: [0, 0, 0, 10] });
@@ -159,9 +192,10 @@
     var years = series.map(function (s) { return String(s.year); });
     var values = series.map(function (s) { return isRatio ? Number((s.value * 100).toFixed(3)) : Number(s.value); });
     var unitText = isRatio ? '率(%)' : (payload.metric === 'chronic_avg' ? '种/人' : '样本量(人)');
-    return {
+    var opt = {
       animationDuration: 420,
       grid: { left: 10, right: 18, top: 42, bottom: 6, containLabel: true },
+      toolbox: toolbox('chart-trend'),
       tooltip: Object.assign({
         trigger: 'axis',
         formatter: function (ps) {
@@ -219,6 +253,13 @@
         }
       }]
     };
+    opt.linkEntries = series.map(function (s, i) {
+      return {
+        name: String(s.year), seriesIndex: 0, dataIndex: i,
+        topics: compactTopics([linkTopic('metric:', payload.metric), linkTopic('year:', s.year)])
+      };
+    });
+    return opt;
   }
 
   /* ---------------------------------------------------- 5. 危险因素暴露率 */
@@ -236,7 +277,13 @@
           '<br/><span style="color:' + P.dim + '">字段 ' + (it.field || '') + '；分母为该字段非缺失记录</span>'
       };
     });
-    var opt = hbar(rows, { labelWidth: 132, valueFormatter: function (v) { return v + '%'; }, top: 6, barWidth: 13 });
+    var opt = hbar(rows, { id: 'chart-factors', labelWidth: 132, valueFormatter: function (v) { return v + '%'; }, top: 26, barWidth: 13 });
+    opt.linkEntries = items.map(function (it, i) {
+      return {
+        name: it.name, seriesIndex: 0, dataIndex: i,
+        topics: compactTopics(['factor:' + it.key, linkTopic('metric:', D.FACTOR_TO_METRIC[it.key])])
+      };
+    });
     opt.xAxis.name = '暴露率(%)';
     opt.xAxis.nameTextStyle = { color: P.dim, fontSize: 11 };
     opt.xAxis.nameLocation = 'end';
@@ -265,9 +312,10 @@
         }
       };
     });
-    return {
+    var opt = {
       animationDuration: 420,
-      grid: { left: 8, right: 8, top: 8, bottom: 30, containLabel: true },
+      grid: { left: 8, right: 8, top: 26, bottom: 30, containLabel: true },
+      toolbox: toolbox('chart-stratify-level'),
       legend: {
         bottom: 0,
         textStyle: { color: P.text2, fontSize: 11 },
@@ -293,14 +341,19 @@
       yAxis: { type: 'category', data: ['风险分层构成'], axisLabel: AXIS_LABEL, axisLine: AXIS_LINE, axisTick: { show: false } },
       series: series
     };
+    opt.linkEntries = levels.map(function (lv, si) {
+      return { name: lv.level, seriesIndex: si, dataIndex: 0, topics: ['level:' + lv.level] };
+    });
+    return opt;
   }
 
   /* ---------------------------------------------------- 6b. 慢病数分布 */
   function chronicDistOption(payload) {
     var dist = payload.distribution || [];
-    return {
+    var opt = {
       animationDuration: 420,
-      grid: { left: 8, right: 12, top: 26, bottom: 6, containLabel: true },
+      grid: { left: 8, right: 12, top: 30, bottom: 6, containLabel: true },
+      toolbox: toolbox('chart-chronic-dist'),
       tooltip: Object.assign({
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
@@ -337,6 +390,10 @@
         }
       }]
     };
+    opt.linkEntries = dist.map(function (d, i) {
+      return { name: d.label, seriesIndex: 0, dataIndex: i, topics: ['bucket:' + d.label] };
+    });
+    return opt;
   }
 
   /* ---------------------------------------------------- 4. 州级地图 */
@@ -355,8 +412,9 @@
     var values = data.map(function (d) { return d.value; });
     var min = values.length ? Math.min.apply(null, values) : 0;
     var max = values.length ? Math.max.apply(null, values) : 1;
-    return {
+    var opt = {
       animationDuration: 520,
+      toolbox: toolbox('chart-geo'),
       tooltip: Object.assign({
         trigger: 'item',
         formatter: function (p) {
@@ -409,6 +467,19 @@
         data: data
       }]
     };
+    /* 该指标的极值州：指标级 hover 联动时地图高亮它，而不是整块变蓝 */
+    opt.linkPeak = data.reduce(function (best, d, i) {
+      return (best < 0 || Number(d.value) > Number(data[best].value)) ? i : best;
+    }, -1);
+    if (opt.linkPeak < 0) opt.linkPeak = null;
+    opt.linkEntries = data.map(function (d, i) {
+      var raw = d.raw || {};
+      return {
+        name: d.name, seriesIndex: 0, dataIndex: i,
+        topics: compactTopics([linkTopic('fips:', D.padFips(raw.stateFips || d.name)), linkTopic('metric:', metricKey)])
+      };
+    });
+    return opt;
   }
 
   /* ---------------------------------------------------- 7. 模型指标对比 */
@@ -489,10 +560,11 @@
       };
     });
 
-    return {
+    var opt = {
       animationDuration: 420,
       /* top 由 34 → 46：图例固定单行（scroll），并给 y 轴名称留出空隙 */
       grid: { left: 10, right: 14, top: 46, bottom: 8, containLabel: true },
+      toolbox: toolbox('chart-metrics'),
       legend: {
         top: 2,
         type: 'scroll',                 // 单行横向滚动，避免换行后压住绘图区
@@ -543,14 +615,22 @@
       },
       series: series
     };
+    opt.linkEntries = [];
+    models.forEach(function (m, mi) {
+      series.forEach(function (s, si) {
+        opt.linkEntries.push({ name: m, seriesIndex: si, dataIndex: mi, topics: ['model:' + m] });
+      });
+    });
+    return opt;
   }
 
   /* ---------------------------------------------------- 8. 年龄组共病率 */
   function ageOption(payload) {
     var rows = (payload.byAge || []).slice().sort(function (a, b) { return a.ageGrp - b.ageGrp; });
-    return {
+    var opt = {
       animationDuration: 420,
       grid: { left: 8, right: 18, top: 34, bottom: 6, containLabel: true },
+      toolbox: toolbox('chart-age'),
       legend: { top: 0, textStyle: { color: P.text2, fontSize: 11 }, itemWidth: 10, itemHeight: 8 },
       tooltip: Object.assign({
         trigger: 'axis',
@@ -608,6 +688,13 @@
         }
       ]
     };
+    opt.linkEntries = [];
+    rows.forEach(function (r, i) {
+      [0, 1].forEach(function (si) {
+        opt.linkEntries.push({ name: r.ageLabel, seriesIndex: si, dataIndex: i, topics: ['age:' + r.ageLabel] });
+      });
+    });
+    return opt;
   }
 
   /* ---------------------------------------------------- 9. 预测概率仪表 */
@@ -616,6 +703,7 @@
     var color = riskLevel === '高风险' ? P.high : (riskLevel === '中风险' ? P.mid : P.low);
     return {
       animationDuration: 500,
+      toolbox: toolbox('chart-gauge'),
       series: [{
         type: 'gauge',
         startAngle: 205,

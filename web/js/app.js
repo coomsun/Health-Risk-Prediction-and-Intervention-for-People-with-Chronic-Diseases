@@ -107,6 +107,119 @@
     return host;
   }
 
+  /* 统一的图表渲染入口：登记 hover 联动索引 + 事件只绑定一次（避免重复加载后处理器叠加） */
+  var latest = {};      /* chartId -> 最近一次渲染所用数据（供只绑定一次的事件处理器读取） */
+  var boundKeys = {};   /* chartId:event -> { chart, handler } */
+  var linkIndex = {};   /* chartId -> { panelId, entries:[{seriesIndex,dataIndex,topics}] } */
+
+  function bindOnce(chartId, eventName, handler) {
+    var chart = C.ensure(chartId);
+    if (!chart) return null;
+    var key = chartId + ':' + eventName;
+    var rec = boundKeys[key];
+    if (rec && rec.chart === chart) return chart;   /* 同一实例只绑定一次，容器重建后重新绑定 */
+    chart.on(eventName, handler);
+    boundKeys[key] = { chart: chart, handler: handler };
+    return chart;
+  }
+
+  function chartPanel(panelId, chartId, option) {
+    chartHost(panelId, chartId);
+    var chart = C.ensure(chartId);
+    if (!chart) return null;
+    linkIndex[chartId] = { panelId: panelId, entries: option.linkEntries || [], peak: option.linkPeak };
+    delete option.linkEntries;
+    delete option.linkPeak;
+    chart.setOption(option, true);
+    bindOnce(chartId, 'mouseover', function (p) { hoverLink(chartId, p); });
+    bindOnce(chartId, 'globalout', function () { clearHover(); });
+    return chart;
+  }
+
+  /* ============================================================
+     跨图 hover 联动：悬停类目 → 相关图 dispatchAction highlight，离开即 downplay
+     ============================================================ */
+  var hoverKeys = null;   /* 当前悬停项标识，避免同一项重复派发 */
+  var hoverAudit = 0;     /* 已派发的高亮次数（联调断言用的只读计数） */
+
+  function clearHover() {
+    if (hoverKeys == null) return;
+    Object.keys(linkIndex).forEach(function (cid) {
+      var chart = C.ensure(cid);
+      if (chart) { try { chart.dispatchAction({ type: 'downplay' }); } catch (e) { /* noop */ } }
+    });
+    toArray(document.querySelectorAll('.is-hover-linked, .is-linked')).forEach(function (n) {
+      n.classList.remove('is-hover-linked');
+      n.classList.remove('is-linked');
+    });
+    document.body.removeAttribute('data-hover-link');
+    document.body.removeAttribute('data-hover-topics');
+    hoverKeys = null;
+  }
+
+  function topicHit(a, b) {
+    for (var i = 0; i < a.length; i++) {
+      for (var j = 0; j < b.length; j++) { if (a[i] === b[j]) return true; }
+    }
+    return false;
+  }
+
+  function hoverLink(chartId, param) {
+    try {
+      var slot = linkIndex[chartId];
+      if (!slot || !param || param.componentType !== 'series') return;
+      var entry = slot.entries.filter(function (e) {
+        return e.seriesIndex === param.seriesIndex && e.dataIndex === param.dataIndex;
+      })[0];
+      if (!entry) { clearHover(); return; }
+      var key = chartId + '|' + param.seriesIndex + '|' + param.dataIndex;
+      if (key === hoverKeys) return;
+      clearHover();
+      var topics = entry.topics || [];
+      var itemTopics = topics.filter(function (t) { return t.indexOf('metric:') !== 0; });
+      var dispatched = {};
+      Object.keys(linkIndex).forEach(function (cid) {
+        if (cid === chartId) return;
+        var matched = linkIndex[cid].entries.filter(function (e) { return topicHit(e.topics || [], topics); });
+        if (!matched.length) return;
+        var panel = byId(linkIndex[cid].panelId);
+        if (panel) panel.classList.add('is-hover-linked');       /* 面板级：相关图描边提示 */
+        var chart = C.ensure(cid);
+        if (!chart) return;
+        matched.forEach(function (e) {
+          try {
+            var target = { seriesIndex: e.seriesIndex, dataIndex: e.dataIndex };
+            if (itemTopics.length && !topicHit(e.topics || [], itemTopics)) {
+              var series = (chart.getOption().series || [])[e.seriesIndex] || {};
+              if (series.type === 'map') {
+                /* 地图不做整块系列高亮（整块变蓝反而干扰读数），改为高亮该指标的极值州 */
+                if (linkIndex[cid].peak == null) return;
+                target = { seriesIndex: e.seriesIndex, dataIndex: linkIndex[cid].peak };
+              } else {
+                target = { seriesIndex: e.seriesIndex };      /* 整条系列高亮 */
+              }
+            }
+            var sig = cid + '|' + target.seriesIndex + '|' + (target.dataIndex == null ? '*' : target.dataIndex);
+            if (dispatched[sig]) return;
+            dispatched[sig] = true;
+            chart.dispatchAction({ type: 'highlight', seriesIndex: target.seriesIndex, dataIndex: target.dataIndex });
+            hoverAudit += 1;
+          } catch (err) { /* 单个图表高亮失败不影响其它图 */ }
+        });
+      });
+      /* 同一语义的 HTML 条目（下钻明细行 / 预测风险标签）同步高亮 */
+      toArray(document.querySelectorAll('[data-link-topics]')).forEach(function (node) {
+        if (topicHit(String(node.getAttribute('data-link-topics')).split(/\s+/), topics)) {
+          node.classList.add('is-linked');
+          hoverAudit += 1;
+        }
+      });
+      document.body.setAttribute('data-hover-link', entry.name || param.name || '');
+      document.body.setAttribute('data-hover-topics', topics.join(','));
+      hoverKeys = key;
+    } catch (e) { /* 联动异常绝不影响图表本身 */ }
+  }
+
   function clearOverlay(body) {
     if (!body) return;
     toArray(body.querySelectorAll('.skeleton, .state-box')).forEach(function (n) { n.remove(); });
@@ -165,11 +278,12 @@
     var el = byId('api-status');
     if (!el) return;
     if (ok) {
+      /* 顶栏只留连通结论，版本/行数/耗时等细节收进 title 悬浮可见 */
       var rows = data && data.factRows != null ? D.compact(data.factRows) : '—';
-      el.innerHTML = '<span class="dot dot-ok"></span><span class="status-text">后端正常 · ' +
-        escapeHtml(String(data.version || '')) + ' · fact_brfss ' + rows + ' 行' +
-        (API.state.lastResponseTime ? ' · ' + escapeHtml(API.state.lastResponseTime) + 'ms' : '') + '</span>';
-      el.title = 'dbPath: ' + (data.dbPath || '') + '\nmodelReady: ' + data.modelReady;
+      el.innerHTML = '<span class="dot dot-ok"></span><span class="status-text">后端正常</span>';
+      el.title = 'version ' + (data.version || '—') + ' · fact_brfss ' + rows + ' 行' +
+        (API.state.lastResponseTime ? ' · ' + API.state.lastResponseTime + 'ms' : '') +
+        '\ndbPath: ' + (data.dbPath || '') + '\nmodelReady: ' + data.modelReady;
     } else {
       el.innerHTML = '<span class="dot dot-bad"></span><span class="status-text">后端未连接：' + escapeHtml(err && err.message || '') + '</span>';
       el.title = '请先启动后端：\n.venv\\Scripts\\python.exe -m uvicorn api.main:app --host 127.0.0.1 --port 8000\n然后刷新页面';
@@ -207,9 +321,71 @@
     });
   }
 
-  function patchFooterTrace() {
-    var el = byId('footer-trace');
-    if (el) el.textContent = 'traceId ' + (API.state.lastTraceId || '—') + (API.state.lastPath ? ' · ' + API.state.lastPath : '');
+  /* ============================================================
+     当前联动/下钻：顶栏显眼 chip + 一键清除（恢复全量）
+     ============================================================ */
+  var DEFAULT_METRIC = 'multimorbidity_rate';
+
+  function metricLabel(metric) {
+    var def = D.METRIC_BY_KEY[metric];
+    return def ? def.label : metric;
+  }
+
+  function renderChips() {
+    var bar = byId('chip-bar');
+    if (!bar) return;
+    var chips = [];
+    if (state.trendMetric !== DEFAULT_METRIC || state.geoMetric !== DEFAULT_METRIC) {
+      chips.push('<span class="chip" data-chip="metric">趋势/地图指标：' + escapeHtml(metricLabel(state.trendMetric)) +
+        '<button class="chip-x" type="button" data-chip-clear="metric" aria-label="清除指标联动" title="清除后回到默认指标">×</button></span>');
+    }
+    if (state.drill) {
+      chips.push('<span class="chip" data-chip="drill">下钻州：' + escapeHtml(D.stateFull(state.drill)) +
+        '<button class="chip-x" type="button" data-chip-clear="drill" aria-label="清除下钻" title="清除后回到全部州">×</button></span>');
+    }
+    if (!chips.length) {
+      bar.hidden = true;
+      bar.innerHTML = '';
+      return;
+    }
+    bar.hidden = false;
+    bar.innerHTML = '<span class="chip-bar-label">当前选择</span>' + chips.join('');
+  }
+
+  function clearMetricLink(silent) {
+    if (state.trendMetric === DEFAULT_METRIC && state.geoMetric === DEFAULT_METRIC) {
+      if (!silent) toast('当前没有指标联动');
+      return false;
+    }
+    state.trendMetric = DEFAULT_METRIC;
+    state.geoMetric = DEFAULT_METRIC;
+    var ts = byId('trend-metric');
+    var gs = byId('geo-metric');
+    if (ts) ts.value = DEFAULT_METRIC;
+    if (gs) gs.value = DEFAULT_METRIC;
+    if (!silent) toast('已清除指标联动，趋势图与地图恢复「' + metricLabel(DEFAULT_METRIC) + '」');
+    loadTrend();
+    loadGeo();
+    renderChips();
+    return true;
+  }
+
+  function clearDrill(silent) {
+    if (!state.drill) {
+      if (!silent) toast('当前没有下钻的州');
+      return false;
+    }
+    state.drill = null;
+    state.filters.state = null;
+    var sel = byId('filter-state');
+    if (sel) sel.value = '';
+    if (!silent) toast('已清除下钻，恢复全部州');
+    loadPrevalence();
+    loadFactors();
+    loadGeo();
+    showState('panel-drill', 'empty', '未选择州', '点击左侧地图中的任一州，这里显示该州 8 类慢病患病率明细');
+    renderChips();
+    return true;
   }
 
   /* ---------------- 1. KPI ---------------- */
@@ -267,26 +443,28 @@
 
   function loadOverview() {
     return run('panel-kpi', function () { return API.get('/api/v1/overview', null, { label: '总览 KPI' }); },
-      function (d) { state.cache.overview = d; renderKpi(d); patchFooterTrace(); });
+      function (d) { state.cache.overview = d; renderKpi(d); });
   }
 
   /* ---------------- 2. 各慢病患病率 ---------------- */
+  function onPrevalenceClick(p) {
+    var d = latest['chart-prevalence'];
+    var item = ((d && d.items) || []).filter(function (x) { return x.name === p.name; })[0];
+    if (!item) return;
+    var metric = D.DISEASE_TO_METRIC[item.key];
+    if (!metric) { toast('「' + item.name + '」在契约中没有对应的趋势指标'); return; }
+    applyMetricLink(metric, '慢病条形图「' + item.name + '」');
+  }
+
   function loadPrevalence() {
     var params = { year: state.filters.year, state: state.filters.state };
     return run('panel-prevalence',
       function () { return API.get('/api/v1/chronic/prevalence', params, { label: '慢病患病率' }); },
       function (d) {
         state.cache.prevalence = d;
-        chartHost('panel-prevalence', 'chart-prevalence');
-        C.render('chart-prevalence', C.prevalenceOption(d));
-        C.on('chart-prevalence', 'click', function (p) {
-          var item = (d.items || []).filter(function (x) { return x.name === p.name; })[0];
-          if (!item) return;
-          var metric = D.DISEASE_TO_METRIC[item.key];
-          if (!metric) { toast('「' + item.name + '」在契约中没有对应的趋势指标'); return; }
-          applyMetricLink(metric, '慢病条形图「' + item.name + '」');
-        });
-        patchFooterTrace();
+        latest['chart-prevalence'] = d;
+        chartPanel('panel-prevalence', 'chart-prevalence', C.prevalenceOption(d));
+        bindOnce('chart-prevalence', 'click', onPrevalenceClick);
       },
       function (d) { return !d || !d.items || d.items.length === 0; },
       '当前筛选条件下没有慢病患病率记录');
@@ -298,63 +476,69 @@
       function () { return API.get('/api/v1/trend', { metric: state.trendMetric }, { label: '年度趋势' }); },
       function (d) {
         state.cache.trend = d;
-        chartHost('panel-trend', 'chart-trend');
-        C.render('chart-trend', C.trendOption(d));
-        patchFooterTrace();
+        chartPanel('panel-trend', 'chart-trend', C.trendOption(d));
       },
       function (d) { return !d || !d.series || d.series.length === 0; },
       '该指标没有年度序列（接口返回空数组）');
   }
 
   /* ---------------- 4. 地图 ---------------- */
+  function onGeoClick(p) {
+    if (!p || !p.name) return;
+    drillInto(D.padFips(p.name));
+  }
+
   function loadGeo() {
     return run('panel-geo',
       function () { return API.get('/api/v1/geo/states', { metric: state.geoMetric }, { label: '州级指标' }); },
       function (d) {
         state.cache.geo = d;
-        chartHost('panel-geo', 'chart-geo');
-        C.render('chart-geo', C.geoOption(d, state.geoMetric, state.drill));
+        chartPanel('panel-geo', 'chart-geo', C.geoOption(d, state.geoMetric, state.drill));
         if (state.drill) {
           try {
             C.ensure('chart-geo').dispatchAction({ type: 'select', seriesIndex: 0, name: state.drill });
           } catch (e) { /* 选中态失败不影响主流程 */ }
         }
-        C.on('chart-geo', 'click', function (p) {
-          if (!p || !p.name) return;
-          var fips = D.padFips(p.name);
-          drillInto(fips);
-        });
-        patchFooterTrace();
+        bindOnce('chart-geo', 'click', onGeoClick);
       },
       function (d) { return !d || !d.items || d.items.length === 0; },
       '该指标没有州级数据');
   }
 
   /* ---------------- 5. 危险因素 ---------------- */
+  function onFactorsClick(p) {
+    var d = latest['chart-factors'];
+    var item = ((d && d.items) || []).filter(function (x) { return x.name === p.name; })[0];
+    if (!item) return;
+    var metric = D.FACTOR_TO_METRIC[item.key];
+    if (!metric) {
+      toast('「' + item.name + '」在冻结契约中没有独立年度趋势指标，已保持当前趋势图');
+      return;
+    }
+    applyMetricLink(metric, '危险因素「' + item.name + '」');
+  }
+
   function loadFactors() {
     return run('panel-factors',
       function () { return API.get('/api/v1/risk/factors', { year: state.filters.year }, { label: '危险因素' }); },
       function (d) {
         state.cache.factors = d;
-        chartHost('panel-factors', 'chart-factors');
-        C.render('chart-factors', C.factorOption(d));
-        C.on('chart-factors', 'click', function (p) {
-          var item = (d.items || []).filter(function (x) { return x.name === p.name; })[0];
-          if (!item) return;
-          var metric = D.FACTOR_TO_METRIC[item.key];
-          if (!metric) {
-            toast('「' + item.name + '」在冻结契约中没有独立年度趋势指标，已保持当前趋势图');
-            return;
-          }
-          applyMetricLink(metric, '危险因素「' + item.name + '」');
-        });
-        patchFooterTrace();
+        latest['chart-factors'] = d;
+        chartPanel('panel-factors', 'chart-factors', C.factorOption(d));
+        bindOnce('chart-factors', 'click', onFactorsClick);
       },
       function (d) { return !d || !d.items || d.items.length === 0; },
       '该年份没有危险因素数据');
   }
 
   /* ---------------- 6. 风险分层 + 慢病数分布 ---------------- */
+  function onStratifyClick(p) {
+    var d = latest['chart-stratify-level'];
+    var lv = ((d && d.levels) || []).filter(function (x) { return x.level === p.seriesName; })[0];
+    if (!lv) return;
+    toast(lv.level + '：' + lv.rule + ' · 样本 ' + D.int(lv.samples) + ' · 占比 ' + D.pct(lv.share));
+  }
+
   function loadStratify() {
     return run('panel-stratify',
       function () { return fetchOnce('stratify', function () { return API.get('/api/v1/risk/stratify', null, { label: '风险分层' }); }); },
@@ -365,14 +549,10 @@
           '<div class="chart" id="chart-stratify-level"></div>' +
           '<div class="chart" id="chart-chronic-dist"></div>' +
           '</div>';
-        C.render('chart-stratify-level', C.stratifyLevelOption(d));
-        C.render('chart-chronic-dist', C.chronicDistOption(d));
-        C.on('chart-stratify-level', 'click', function (p) {
-          var lv = (d.levels || []).filter(function (x) { return x.level === p.seriesName; })[0];
-          if (!lv) return;
-          toast(lv.level + '：' + lv.rule + ' · 样本 ' + D.int(lv.samples) + ' · 占比 ' + D.pct(lv.share));
-        });
-        patchFooterTrace();
+        latest['chart-stratify-level'] = d;
+        chartPanel('panel-stratify', 'chart-stratify-level', C.stratifyLevelOption(d));
+        chartPanel('panel-stratify', 'chart-chronic-dist', C.chronicDistOption(d));
+        bindOnce('chart-stratify-level', 'click', onStratifyClick);
       },
       function (d) { return !d || !d.levels || d.levels.length === 0; },
       '没有风险分层数据');
@@ -384,9 +564,7 @@
       function () { return API.get('/api/v1/model/metrics', null, { label: '模型指标' }); },
       function (d) {
         state.cache.metrics = d;
-        chartHost('panel-metrics', 'chart-metrics');
-        C.render('chart-metrics', C.modelMetricOption(d));
-        patchFooterTrace();
+        chartPanel('panel-metrics', 'chart-metrics', C.modelMetricOption(d));
       },
       function (d) { return !d || !d.items || d.items.length === 0; },
       'model_metrics 表暂无记录（需先运行 pipeline/05_train.py）');
@@ -394,8 +572,7 @@
 
   /* ---------------- 8. 年龄组（复用 stratify 响应，不重复请求） ---------------- */
   function renderAge(d) {
-    chartHost('panel-age', 'chart-age');
-    C.render('chart-age', C.ageOption(d));
+    chartPanel('panel-age', 'chart-age', C.ageOption(d));
   }
 
   function loadAge() {
@@ -405,7 +582,6 @@
       },
       function (d) {
         renderAge(d);
-        patchFooterTrace();
       },
       function (d) { return !d || !d.byAge || d.byAge.length === 0; },
       '没有年龄组分层数据');
@@ -460,6 +636,7 @@
     affected.push(loadFactors());
     if (state.filters.state) affected.push(loadDrill(state.filters.state));
     patchFilterNote();
+    renderChips();
     return Promise.all(affected);
   }
 
@@ -486,6 +663,7 @@
     toast('已由' + sourceLabel + '联动：趋势图与地图指标 → ' + label);
     loadTrend();
     loadGeo();
+    renderChips();
   }
 
   function drillInto(fips) {
@@ -499,6 +677,7 @@
     loadFactors();
     loadDrill(fips);
     loadGeo();
+    renderChips();
   }
 
   function loadDrill(fips) {
@@ -507,7 +686,6 @@
       function () { return API.get('/api/v1/chronic/prevalence', { year: year, state: fips }, { label: '下钻明细' }); },
       function (d) {
         renderDrill(fips, d);
-        patchFooterTrace();
       },
       function (d) { return !d || !d.items || d.items.length === 0; },
       '该州在当前年份没有记录');
@@ -520,14 +698,14 @@
     var maxP = items.length ? Math.max.apply(null, items.map(function (x) { return x.prevalence; })) : 1;
     var rows = items.map(function (it) {
       var w = maxP > 0 ? (it.prevalence / maxP * 100) : 0;
-      return '<li class="drill-row">' +
+      return '<li class="drill-row" data-link-topics="disease:' + escapeHtml(it.key) + '">' +
         '<span class="drill-name">' + escapeHtml(it.name) + '</span>' +
         '<span class="drill-bar"><i style="width:' + w.toFixed(1) + '%;background:' + (D.DISEASE_COLOR[it.key] || P.primary) + '"></i></span>' +
         '<span class="drill-val">' + D.pct(it.prevalence) + '</span>' +
         '</li>';
     }).join('');
     body.innerHTML =
-      '<div class="drill-wrap">' +
+      '<div class="drill-wrap" data-link-topics="fips:' + escapeHtml(fips) + '">' +
       '<div class="drill-title"><strong>' + escapeHtml(D.stateFull(fips)) + '</strong>' +
       '<span class="drill-meta">' + (state.filters.year ? state.filters.year + ' 年 · ' : '全部年份 · ') +
       '样本 n = ' + D.int(d.totalSamples) + '</span></div>' +
@@ -539,16 +717,7 @@
     var applyBtn = byId('drill-apply-global');
     if (applyBtn) applyBtn.addEventListener('click', function () { onFilterChange(); });
     var clearBtn = byId('drill-clear');
-    if (clearBtn) clearBtn.addEventListener('click', function () {
-      state.drill = null;
-      state.filters.state = null;
-      var sel = byId('filter-state');
-      if (sel) sel.value = '';
-      loadPrevalence();
-      loadFactors();
-      loadGeo();
-      showState('panel-drill', 'empty', '未选择州', '点击左侧地图中的任一州，这里显示该州 8 类慢病患病率明细');
-    });
+    if (clearBtn) clearBtn.addEventListener('click', function () { clearDrill(); });
   }
 
   /* ============================================================
@@ -568,7 +737,8 @@
         control = '<input type="number" name="' + f.name + '" id="pf-' + f.name + '" value="' + f.default +
           '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '">';
       }
-      return '<label class="field"><span>' + escapeHtml(f.label) + '</span>' + control + '</label>';
+      return '<label class="field"><span>' + escapeHtml(f.label) + '</span>' + control +
+        '<span class="field-err" id="pfe-' + f.name + '"></span></label>';
     }).join('');
     body.innerHTML =
       '<div class="predict">' +
@@ -590,14 +760,19 @@
       '<p class="form-msg">提交后依据模型风险等级与命中的可干预因素生成建议（暴露率取自 /api/v1/risk/factors）</p></div>' +
       '</div>';
 
-    byId('predict-form').addEventListener('submit', function (ev) {
+    var form = byId('predict-form');
+    form.addEventListener('submit', function (ev) {
       ev.preventDefault();
       submitPredict();
     });
+    /* 用户一改动就清掉该字段的越界提示 */
+    form.addEventListener('input', onPredictFieldEdit);
+    form.addEventListener('change', onPredictFieldEdit);
     byId('predict-reset').addEventListener('click', function () {
       D.PREDICT_FIELDS.forEach(function (f) {
         var node = byId('pf-' + f.name);
         if (node) node.value = String(f.default);
+        clearFieldError(f.name);
       });
       var msg = byId('predict-msg');
       msg.className = 'form-msg';
@@ -619,25 +794,79 @@
     return payload;
   }
 
+  function onPredictFieldEdit(ev) {
+    var t = ev.target;
+    if (t && t.id && t.id.indexOf('pf-') === 0) clearFieldError(t.id.slice(3));
+  }
+
+  function clearFieldError(name) {
+    var node = byId('pf-' + name);
+    var err = byId('pfe-' + name);
+    if (node && node.classList) node.classList.remove('is-invalid');
+    if (err) err.textContent = '';
+  }
+
+  /* 就地校验：越界/非数值直接拦在表单里，不发请求 */
+  function validatePredict() {
+    var firstBad = null;
+    D.PREDICT_FIELDS.forEach(function (f) {
+      clearFieldError(f.name);
+      if (f.type !== 'number') return;
+      var node = byId('pf-' + f.name);
+      if (!node) return;
+      var raw = String(node.value == null ? '' : node.value).trim();
+      if (raw === '') return;              /* 留空按缺失特征处理，交给后端 */
+      var num = Number(raw);
+      var why = isNaN(num) ? '请填写数字' : ((num < f.min || num > f.max) ? ('允许区间 ' + f.min + '–' + f.max) : '');
+      if (!why) return;
+      var err = byId('pfe-' + f.name);
+      if (node.classList) node.classList.add('is-invalid');
+      if (err) err.textContent = why;
+      if (!firstBad) firstBad = '「' + f.label + '」' + why + '，未发出请求，请修改后重试';
+    });
+    return firstBad;
+  }
+
+  var predictBusy = false;   /* in-flight 守卫：连点只发一次请求 */
+
   function submitPredict() {
     var submit = byId('predict-submit');
     var msg = byId('predict-msg');
+    if (predictBusy) {
+      msg.className = 'form-msg';
+      msg.textContent = '上一次预测仍在进行，请稍候…';
+      return;
+    }
+    var bad = validatePredict();
+    if (bad) {
+      msg.className = 'form-msg is-error';
+      msg.textContent = bad;
+      return;
+    }
     var payload = collectPredict();
     if (!Object.keys(payload).length) {
       msg.className = 'form-msg is-error';
       msg.textContent = '请至少填写一项特征';
       return;
     }
+    predictBusy = true;
     submit.disabled = true;
     msg.className = 'form-msg';
     msg.textContent = '正在请求 /api/v1/predict …';
-    /* /predict 受 JWT 保护：postAuth 会先自动登录拿令牌，再带 Bearer 发起请求 */
-    API.postAuth('/api/v1/predict', payload, { label: '在线预测' }).then(function (data) {
+    /* /predict 受 JWT 保护：postAuth 先自动登录拿令牌再带 Bearer 请求；
+       timeoutMs=20000 / retries=1：失败时不再空转 4 轮，兼顾成功率与等待时间 */
+    API.postAuth('/api/v1/predict', payload, { label: '在线预测', timeoutMs: 20000, retries: 1 }).then(function (data) {
       state.cache.predict = data;
-      renderPredictResult(data);
       msg.className = 'form-msg is-ok';
-      msg.textContent = '预测完成 · 延迟 ' + (data.latencyMs == null ? '—' : data.latencyMs) + ' ms · traceId ' + (API.state.lastTraceId || '—');
-      patchFooterTrace();
+      msg.textContent = '预测完成 · 延迟 ' + (data.latencyMs == null ? '—' : Math.round(Number(data.latencyMs))) + ' ms';
+      /* 渲染异常不得伪装成「预测失败」：成功结论已先行给出 */
+      try {
+        renderPredictResult(data);
+      } catch (e) {
+        msg.className = 'form-msg is-error';
+        msg.textContent = '预测已成功返回，但结果渲染异常：' + (e && e.message ? e.message : e) + '（详见页首错误条）';
+        reportError('预测结果渲染异常：' + (e && e.message ? e.message : e));
+      }
     }).catch(function (err) {
       msg.className = 'form-msg is-error';
       var hint = '';
@@ -651,9 +880,10 @@
         hint = '（自动登录失败，请检查后端 AUTH_USERS 配置或令牌服务是否可用）';
       }
       msg.textContent = '预测失败：' + (err && err.message || '未知错误') + ' code=' + (err && err.code) + hint;
+      /* 失败不改动表单：已填数值原样保留，便于修改后重试 */
       renderPredictError(err);
-      patchFooterTrace();
     }).then(function () {
+      predictBusy = false;
       submit.disabled = false;
     });
   }
@@ -697,7 +927,7 @@
       var ph = byId('predict-placeholder');
       if (ph) ph.remove();
       lines.innerHTML =
-        '<div class="result-line"><span>风险等级</span><b><span class="risk-tag ' + levelClass + '">' + escapeHtml(data.riskLevel) + '</span></b></div>' +
+        '<div class="result-line"><span>风险等级</span><b><span class="risk-tag ' + levelClass + '" data-link-topics="level:' + escapeHtml(data.riskLevel) + '">' + escapeHtml(data.riskLevel) + '</span></b></div>' +
         '<div class="result-line"><span>阳性概率</span><b>' + D.pct(data.probability, 2) + '</b></div>' +
         '<div class="result-line"><span>预测标签（0.5 判定）</span><b>' + (data.prediction === 1 ? '共病阳性' : '共病阴性') + '</b></div>' +
         '<div class="result-line"><span>判定阈值</span><b>中 ≥ ' + D.pct(thr.low, 0) + ' · 高 ≥ ' + D.pct(thr.high, 0) + '</b></div>' +
@@ -795,6 +1025,7 @@
       if (yearSel) yearSel.value = '';
       if (stateSel) stateSel.value = '';
       showState('panel-drill', 'empty', '未选择州', '点击左侧地图中的任一州，这里显示该州 8 类慢病患病率明细');
+      renderChips();
       onFilterChange();
       loadGeo();
     });
@@ -807,6 +1038,22 @@
     if (geoSel) geoSel.addEventListener('change', function () {
       state.geoMetric = geoSel.value;
       loadGeo();
+    });
+    var chipBar = byId('chip-bar');
+    if (chipBar) chipBar.addEventListener('click', function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest('[data-chip-clear]') : null;
+      if (!btn) return;
+      var what = btn.getAttribute('data-chip-clear');
+      if (what === 'drill') clearDrill();
+      else if (what === 'metric') clearMetricLink();
+    });
+    /* Esc：清除当前联动与下钻，恢复默认视图 */
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Escape' && ev.key !== 'Esc') return;
+      var did = false;
+      if (state.drill) did = clearDrill(true) || did;
+      if (state.trendMetric !== DEFAULT_METRIC || state.geoMetric !== DEFAULT_METRIC) did = clearMetricLink(true) || did;
+      if (did) toast('已按 Esc 清除联动与下钻，恢复默认视图');
     });
     window.addEventListener('resize', debounce(function () { C.resizeAll(); }, 160));
     window.addEventListener('error', function (ev) {
@@ -834,6 +1081,9 @@
     buildPredictForm();
     bindEvents();
     patchFilterNote();
+    renderChips();
+    /* 预取登录令牌：首次预测不必等登录，缩短端到端延迟 */
+    API.ensureToken().catch(function () { return null; });
     showSkeleton('panel-drill');
     showState('panel-drill', 'empty', '未选择州', '点击左侧地图中的任一州，这里显示该州 8 类慢病患病率明细');
 
@@ -850,9 +1100,7 @@
       loadHealth().catch(function () { return null; })
     ];
     return Promise.all(jobs).then(function () {
-      patchFooterTrace();
-      var fa = byId('footer-api');
-      if (fa) fa.textContent = API.state.base + '/api/v1';
+      renderChips();
       if (window.console && console.info) {
         console.info('[brfss] 初始化完成 · API ' + API.state.base + ' · 脚本异常数 ' + state.errors);
       }
@@ -865,7 +1113,11 @@
     init: init,
     reloadAll: function () { return onFilterChange(); },
     drillInto: drillInto,
-    applyMetricLink: applyMetricLink
+    applyMetricLink: applyMetricLink,
+    clearDrill: clearDrill,
+    clearMetricLink: clearMetricLink,
+    renderChips: renderChips,
+    hoverAudit: function () { return hoverAudit; }
   };
 
   document.addEventListener('DOMContentLoaded', function () {

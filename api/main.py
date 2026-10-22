@@ -61,6 +61,10 @@ STARTED_AT = time.monotonic()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     LOGGER.warning("服务启动 | 版本=%s | DB=%s | 模型=%s", __version__, queries.db_path(), queries.model_path())
+    # 启动预热：把首个 /predict 要付的一次性开销（pandas 导入、模型反序列化、
+    # DB 首次连接、首次推理）提前到这里；预热失败只记日志，不影响启动。
+    _warm_up_db()
+    _warm_up()
     yield
     LOGGER.warning("服务关闭")
 
@@ -232,6 +236,52 @@ def _risk_level(probability: float) -> str:
     if probability >= RISK_THRESHOLDS["low"]:
         return "中风险"
     return "低风险"
+
+
+# ---------------------------------------------------------------- 启动预热
+def _warm_up_db() -> float | None:
+    """预热一次数据库连接（首次建连含打开文件与 PRAGMA 设置）。
+
+    返回耗时毫秒；失败返回 None（只记日志，不抛异常）。
+    """
+    started = time.perf_counter()
+    try:
+        # 只建连 + 一次最小查询；queries.health() 的 COUNT(*) 要在 2.1M 行表上全表
+        # 扫描（本机实测 445ms），与 /predict 无关，不适合放进启动路径。
+        with queries.connection() as conn:
+            conn.execute("SELECT 1").fetchone()
+    except Exception as exc:  # noqa: BLE001 - 预热失败一律降级为日志
+        LOGGER.warning("启动预热失败 | 组件=数据库 | %s: %s", type(exc).__name__, exc)
+        return None
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    LOGGER.warning("启动预热完成 | 组件=数据库 | 耗时=%.2fms", elapsed_ms)
+    return elapsed_ms
+
+
+def _warm_up(model_path: Path | None = None) -> float | None:
+    """预热在线预测链路：pandas 延迟导入 -> joblib 反序列化 -> 一次 dummy 推理。
+
+    这三笔开销原本由首个 /api/v1/predict 请求承担（实测秒级），提前到启动阶段后
+    首个请求不再出现长尾。入参构造与 /predict 完全一致（缺失特征置 NaN）。
+    返回耗时毫秒；失败返回 None —— 预热失败绝不能让服务启动失败，
+    此时 /predict 仍按原逻辑返回 code=1001（模型未就绪）。
+    """
+    started = time.perf_counter()
+    path = queries.model_path() if model_path is None else model_path
+    try:
+        import pandas as pd  # 与 /predict 相同的延迟导入，这里提前触发
+
+        model = _load_model(path)
+        features = _feature_names(model, path.parent)
+        row = {name: float("nan") for name in features or ()}
+        frame = pd.DataFrame([row], columns=features) if features else pd.DataFrame([row])
+        _predict_probability(model, frame)
+    except Exception as exc:  # noqa: BLE001 - 预热失败一律降级为日志
+        LOGGER.warning("启动预热失败 | 组件=模型 | 模型=%s | %s: %s", path, type(exc).__name__, exc)
+        return None
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    LOGGER.warning("启动预热完成 | 模型=%s | 耗时=%.2fms", path, elapsed_ms)
+    return elapsed_ms
 
 
 # ---------------------------------------------------------------- 通用查询

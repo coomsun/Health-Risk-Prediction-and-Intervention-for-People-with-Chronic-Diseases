@@ -1,0 +1,41 @@
+验收汇总：40 / 40 通过
+PASS  A1a 每行 span 合计 = 3 | 共 6 行
+PASS  A1b geo/drill 同一水平位置 (Δtop<=2) | Δtop=0
+PASS  A1c drill 紧跟 geo 右侧 (left>=right-2) | gap=14px
+PASS  A1d drill 在 DOM 中紧跟 geo | 
+PASS  A1e 面板相对顺序符合方案 | kpi > prevalence > trend > geo > drill > factors > stratify > age > metrics > predict
+PASS  A2 可见 panel-hint <= 3 | 可见=3（改造前 10）
+PASS  A2b 被删说明文字已转入 panel title（无面板缺 title） | 缺 title: []
+PASS  A3 顶栏严格为「后端正常」 | 实际='后端正常'
+PASS  A3b 版本/行数等细节仍在 title（信息未丢） | 
+PASS  A4a 页脚已无 #footer-trace / #footer-api | 
+PASS  A4b 页脚不含 traceId | 
+PASS  A4c 页脚不含 /api/v1 | 
+PASS  A5 页脚数据来源仅保留 CDC BRFSS | '数据来源：CDC BRFSS'
+PASS  A6⑤ 8 张图均提供 toolbox.saveAsImage | 
+PASS  A6① hover 触发跨图联动（body[data-hover-link] 有值） | link='2019'
+PASS  A6① 相关图 geo 面板被同步高亮 | 已高亮面板=['panel-geo']
+PASS  A6① 真实派发 echarts dispatchAction highlight | hoverAudit=1
+PASS  A6① 离开后取消高亮（downplay + 清除标记） | {"link": null, "linked": 0}
+PASS  A6④ KPI 卡片有可见 hover 反馈 | {'border': 'rgba(120, 152, 200, 0.18)', 'transform': 'none'} -> {'border': 'rgb(79, 140, 255)', 'transform': 'matrix(1, 0, 0, 1, 0, -2)'}
+PASS  A6④ 图表容器有可见 hover 反馈 | none -> rgba(79, 140, 255, 0.22) 0px 0px 0px 1px inset
+PASS  A6② 联动/下钻显示为 chip | ['metric:趋势/地图指标：糖尿病患病率×', 'drill:下钻州：加利福尼亚州 CA×']
+PASS  A6② 清除下钻 chip → state.drill=null 且筛选回到全部州（恢复全量） | {"chips": 1, "drill": null, "drillBox": "\u672a\u9009\u62e9\u5dde\u5360\u4f4d", "stateFilter": ""}
+PASS  A6② 清除指标 chip → 恢复默认指标且 chip 条收起 | {"barHidden": true, "chips": 0, "geoSel": "multimorbidity_rate", "geoTitle": false, "metric": "multimorbidity_rate", "trendSel": "multimorbidity_rate"}
+PASS  A6③ Esc 清除联动与下钻 | {"chips": 0, "drill": null, "metric": "multimorbidity_rate"} 触发方式=真实按键 send_keys(ESCAPE)
+PASS  console SEVERE = 0（正常路径：加载/hover/chip/Esc） | SEVERE=0
+PASS  A7① in-flight 守卫：连点两次只发 1 次请求 | 实际请求数=1
+PASS  A7④ /predict 显式 timeoutMs=20000 | 长定时器=[20000]
+PASS  A4 预测成功提示为「预测完成 · 延迟 N ms」 | 实际='预测完成 · 延迟 137 ms'
+PASS  A4e 提示不含 traceId / 32 位十六进制串 | 
+PASS  A7③ 结果正常渲染（风险标签 + 明细行 + 建议） | tag=中风险 topics=level:中风险 lines=7 advice=1
+PASS  A7③ 渲染异常不伪装成「预测失败」 | 预测已成功返回，但结果渲染异常：模拟渲染异常（详见页首错误条）
+PASS  A7③ 渲染异常走全局错误条（显性化） | data-js-errors=1
+PASS  A7② 越界就地提示字段名与区间且不发请求 | 请求数=0 msg='「BMI（bmi）」允许区间 10–70，未发出请求，请修改后重试' 字段提示='允许区间 10–70'
+PASS  A7④ retries=1：网络失败只尝试 2 次（旧配置为 4 次） | 尝试次数=2
+PASS  A7⑤ 失败后保留已填数值 | bmi=29.9 age_grp=8
+PASS  A7 失败提示仍为「预测失败：…」 | 预测失败：网络请求失败：Failed to fetch（后端是否已启动？） code=-1
+PASS  端到端：真实 /predict 成功且提示格式达标 | 预测完成 · 延迟 8 ms（含建议 2 条，接口往返 0.26s）
+PASS  A7 页面加载即预取令牌（首查不必等登录） | auth=demo
+PASS  注入渲染异常只产生 1 条由 reportError 主动上报的 SEVERE | SEVERE=1
+PASS  最终刷新后 console SEVERE = 0 | SEVERE=0
