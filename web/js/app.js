@@ -757,7 +757,7 @@
       '</div>' +
       '</div>' +
       '<div class="advice" id="predict-advice"><h3>干预建议</h3>' +
-      '<p class="form-msg">提交后依据模型风险等级与命中的可干预因素生成建议（暴露率取自 /api/v1/risk/factors）</p></div>' +
+      '<p class="form-msg">提交后依据模型风险等级与命中的可干预因素生成建议</p></div>' +
       '</div>';
 
     var form = byId('predict-form');
