@@ -1,7 +1,7 @@
 @echo off
 chcp 936 >nul
 setlocal EnableExtensions
-title 慢性病患者健康风险预测与干预 · 一键启动
+title 慢性病患者健康风险预测与干预 · 一键启动（翻页式大屏）
 cd /d "%~dp0"
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
@@ -15,9 +15,11 @@ set "PYTHONUNBUFFERED=1"
 
 echo ==================================================
 echo   慢性病患者健康风险预测与干预 · 一键启动
+echo   目标页面：翻页式多屏大屏  /screen/
 echo ==================================================
 echo   项目目录 : %ROOT%
 echo   服务端口 : %PORT%   （默认 8000；换端口：一键启动.bat 8010）
+echo   数据口径 : CDC BRFSS 2012-2025 十四年（约 620 万条）
 echo.
 
 rem ---------- 1/4 定位 Python 解释器 ----------
@@ -92,14 +94,16 @@ exit /b 1
 :ready
 echo        服务已就绪。
 
-rem ---------- 4/4 打开可视化大屏 ----------
+rem ---------- 4/4 打开翻页式大屏 ----------
 :open_dashboard
-set "DASH=file:///%ROOT:\=/%/web/index.html?api=http://127.0.0.1:%PORT%"
-echo [4/4] 打开可视化大屏： %DASH%
-rundll32 url.dll,FileProtocolHandler "%DASH%"
+set "DASH=http://127.0.0.1:%PORT%/screen/"
+echo [4/4] 打开翻页式大屏： %DASH%
+start "" "%DASH%"
 echo        （若浏览器没有自动弹出，把上面这行地址复制到浏览器打开）
 echo.
 echo --------------------------------------------------
+echo  翻页大屏 : %DASH%          （← 演示看这个）
+echo  单页大屏 : http://127.0.0.1:%PORT%/                （初版单页，备用）
 echo  API 文档 : http://127.0.0.1:%PORT%/docs
 echo  健康检查 : http://127.0.0.1:%PORT%/api/v1/health
 echo  运行日志 : %LOGDIR%\api_%PORT%.log
